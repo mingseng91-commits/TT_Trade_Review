@@ -1,0 +1,3353 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tastytrade Portfolio Review v2</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #18202a;
+      --muted: #66717f;
+      --line: #dfe4ea;
+      --panel: #ffffff;
+      --surface: #f5f7fa;
+      --wash: #eef3f7;
+      --accent: #126f7a;
+      --accent-2: #8a5a12;
+      --gain: #127447;
+      --loss: #b33b3b;
+      --info: #355c9a;
+      --shadow: 0 16px 36px rgba(32, 42, 54, 0.10);
+      --radius: 8px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-width: 320px;
+      background: var(--surface);
+      color: var(--ink);
+      font: 14px/1.45 Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      letter-spacing: 0;
+    }
+
+    button, input, select {
+      font: inherit;
+    }
+
+    button {
+      min-height: 38px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: var(--panel);
+      color: var(--ink);
+      cursor: pointer;
+    }
+
+    button:hover {
+      border-color: #aab5c2;
+    }
+
+    .app {
+      min-height: 100vh;
+    }
+
+    .topbar {
+      border-bottom: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.94);
+    }
+
+    .topbar-inner {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 18px;
+      align-items: center;
+      max-width: 1480px;
+      margin: 0 auto;
+      padding: 18px 22px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(24px, 3vw, 36px);
+      line-height: 1.05;
+      font-weight: 760;
+    }
+
+    .subtitle {
+      margin-top: 5px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: end;
+      gap: 10px;
+    }
+
+    .file-button {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 38px;
+      padding: 0 13px;
+      border: 1px solid var(--accent);
+      border-radius: 7px;
+      background: var(--accent);
+      color: #fff;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .file-button input {
+      display: none;
+    }
+
+    .language-select {
+      width: 128px;
+    }
+
+    .container {
+      max-width: 1480px;
+      margin: 0 auto;
+      padding: 22px;
+    }
+
+    .status {
+      min-height: 34px;
+      margin-bottom: 16px;
+      padding: 8px 11px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+      color: var(--muted);
+      box-shadow: 0 4px 16px rgba(27, 35, 44, 0.04);
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+
+    .status strong {
+      display: inline-block;
+      max-width: min(100%, 42ch);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      vertical-align: bottom;
+      white-space: nowrap;
+      color: var(--ink);
+    }
+
+    .kpis {
+      display: grid;
+      grid-template-columns: repeat(8, minmax(135px, 1fr));
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .kpi {
+      min-height: 92px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+      box-shadow: 0 8px 22px rgba(27, 35, 44, 0.05);
+    }
+
+    .kpi-label {
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+    }
+
+    .kpi-value {
+      margin-top: 8px;
+      font-size: clamp(18px, 2vw, 26px);
+      line-height: 1.1;
+      font-weight: 760;
+      overflow-wrap: anywhere;
+    }
+
+    .kpi-note {
+      margin-top: 5px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .toolbar {
+      display: grid;
+      grid-template-columns: minmax(220px, 1fr) auto auto;
+      gap: 10px;
+      align-items: center;
+      margin: 12px 0 14px;
+    }
+
+    .period-controls {
+      display: grid;
+      grid-template-columns: minmax(160px, 220px);
+      gap: 10px;
+      align-items: center;
+      margin: 0 0 16px;
+    }
+
+    .period-controls.custom {
+      grid-template-columns: minmax(160px, 220px) repeat(2, minmax(130px, 170px));
+    }
+
+    .tabbar {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 4px 0 14px;
+      margin-bottom: 4px;
+    }
+
+    .tabbar button {
+      flex: 0 0 auto;
+      min-height: 38px;
+      border: 1px solid var(--line);
+      background: var(--panel);
+      color: var(--muted);
+    }
+
+    .tabbar button.active {
+      border-color: var(--ink);
+      background: var(--ink);
+      color: #fff;
+    }
+
+    [data-tab-panel].hidden-tab {
+      display: none;
+    }
+
+    .hidden-control {
+      display: none;
+    }
+
+    .control, .select {
+      width: 100%;
+      min-height: 38px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: var(--panel);
+      color: var(--ink);
+      padding: 0 11px;
+    }
+
+    .segmented {
+      display: inline-grid;
+      grid-auto-flow: column;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+      background: var(--panel);
+    }
+
+    .segmented button {
+      min-width: 92px;
+      border: 0;
+      border-radius: 0;
+      border-right: 1px solid var(--line);
+      background: transparent;
+    }
+
+    .segmented button:last-child {
+      border-right: 0;
+    }
+
+    .segmented button.active {
+      background: var(--ink);
+      color: #fff;
+    }
+
+    .grid-main {
+      display: grid;
+      grid-template-columns: minmax(0, 1.05fr) minmax(360px, 0.95fr);
+      gap: 16px;
+      align-items: start;
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
+      background: #fbfcfd;
+    }
+
+    .panel-tools {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .compact-select {
+      width: min(220px, 100%);
+      min-height: 34px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: var(--panel);
+      color: var(--ink);
+      padding: 0 9px;
+    }
+
+    .panel-title {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 740;
+    }
+
+    .panel-note {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .table-wrap {
+      width: 100%;
+      overflow: auto;
+      max-height: 680px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      white-space: nowrap;
+    }
+
+    th, td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--line);
+      text-align: right;
+      vertical-align: middle;
+    }
+
+    th {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      background: #f9fafb;
+      color: #526071;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    tfoot th {
+      position: static;
+      background: #fbfcfd;
+      color: var(--ink);
+      font-size: 12px;
+      text-transform: uppercase;
+    }
+
+    th:first-child, td:first-child,
+    .text {
+      text-align: left;
+    }
+
+    tr:hover td {
+      background: #f6f9fb;
+    }
+
+    tr.selected td {
+      background: #eaf4f5;
+    }
+
+    th[data-lifecycle-sort]::after,
+    th[data-sort-key]::after {
+      content: "↕";
+      color: #9aa6b2;
+      font-size: 11px;
+      margin-left: 6px;
+    }
+
+    th.sorted-asc::after {
+      content: "↑";
+      color: var(--teal);
+    }
+
+    th.sorted-desc::after {
+      content: "↓";
+      color: var(--teal);
+    }
+
+    .ticker-cell {
+      font-weight: 750;
+      color: var(--ink);
+    }
+
+    .gain {
+      color: var(--gain);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .loss {
+      color: var(--loss);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .neutral {
+      color: var(--muted);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .clickable-row {
+      cursor: pointer;
+    }
+
+    .lifecycle-detail {
+      margin-top: 16px;
+    }
+
+    .chart-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+      margin: 18px 0;
+    }
+
+    .chart-card {
+      min-height: 320px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .chart-body {
+      position: relative;
+      height: 270px;
+      padding: 12px;
+    }
+
+    .chart-tooltip {
+      position: absolute;
+      z-index: 30;
+      display: none;
+      max-width: 220px;
+      padding: 7px 9px;
+      border: 1px solid #cdd6df;
+      border-radius: 7px;
+      background: rgba(255, 255, 255, 0.96);
+      box-shadow: 0 8px 24px rgba(27, 35, 44, 0.16);
+      color: var(--ink);
+      font-size: 12px;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+
+    .explain-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      padding: 14px 16px 16px;
+    }
+
+    .explain-item {
+      min-height: 132px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: #fbfcfd;
+    }
+
+    .explain-item h3 {
+      margin: 0 0 6px;
+      font-size: 13px;
+    }
+
+    .explain-item p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .drill {
+      display: grid;
+      gap: 16px;
+    }
+
+    .mini-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
+      background: var(--wash);
+    }
+
+    .mini {
+      padding: 10px;
+      border: 1px solid #d7e0e8;
+      border-radius: 7px;
+      background: #fff;
+    }
+
+    .mini-label {
+      color: var(--muted);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .mini-value {
+      margin-top: 4px;
+      font-weight: 750;
+      font-size: 17px;
+    }
+
+    .empty {
+      padding: 42px 22px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .footnote {
+      margin: 18px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    @media (max-width: 1180px) {
+      .kpis {
+        grid-template-columns: repeat(4, minmax(135px, 1fr));
+      }
+
+      .grid-main {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .topbar-inner {
+        grid-template-columns: 1fr;
+      }
+
+      .actions {
+        justify-content: start;
+      }
+
+      .container {
+        padding: 14px;
+      }
+
+      .kpis {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .toolbar {
+        grid-template-columns: 1fr;
+      }
+
+      .period-controls {
+        grid-template-columns: 1fr;
+      }
+
+      .chart-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .chart-body {
+        height: 340px;
+      }
+
+      .status strong {
+        max-width: 22ch;
+      }
+
+      .explain-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .mini-grid {
+        grid-template-columns: 1fr;
+      }
+
+      th, td {
+        padding: 9px 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="topbar-inner">
+        <div>
+          <h1 data-i18n="appTitle">Tastytrade Portfolio Review v2</h1>
+          <div class="subtitle" data-i18n="subtitle">Cashflow and realized PnL from your exported transaction history.</div>
+        </div>
+        <div class="actions">
+          <select id="languageSelect" class="select language-select" title="Language">
+            <option value="en">English</option>
+            <option value="zh">中文</option>
+          </select>
+          <label class="file-button" title="Load a tastytrade CSV export" data-i18n-title="loadCsvTitle">
+            <span data-i18n="loadCsv">Load CSV</span>
+            <input id="fileInput" type="file" accept=".csv,text/csv">
+          </label>
+          <button id="resetSelection" type="button" title="Clear ticker drilldown" data-i18n="clearTicker" data-i18n-title="clearTickerTitle">Clear Ticker</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="container">
+      <div id="status" class="status"></div>
+
+      <div class="period-controls">
+        <select id="periodPreset" class="select" title="Date period" data-i18n-title="datePeriod">
+          <option value="all" data-i18n="allDates">All Dates</option>
+          <option value="ytd" data-i18n="yearToDate">Year to Date</option>
+          <option value="last12" data-i18n="last12Months">Last 12 Months</option>
+          <option value="custom" data-i18n="customPeriod">Custom</option>
+        </select>
+        <input id="periodStart" class="control hidden-control" type="date" title="Start date" data-i18n-title="startDate">
+        <input id="periodEnd" class="control hidden-control" type="date" title="End date" data-i18n-title="endDate">
+      </div>
+
+      <nav class="tabbar" aria-label="Dashboard tabs" data-i18n-aria-label="dashboardTabs">
+        <button type="button" class="active" data-tab-target="overview" data-i18n="overviewTab">Overview</button>
+        <button type="button" data-tab-target="tickers" data-i18n="tickersTab">Tickers</button>
+        <button type="button" data-tab-target="cashflow" data-i18n="cashflowTab">Cashflow</button>
+        <button type="button" data-tab-target="options" data-i18n="optionsTab">Options</button>
+        <button type="button" data-tab-target="wheel" data-i18n="wheelTab">Wheel</button>
+        <button type="button" data-tab-target="guide" data-i18n="guideTab">Guide</button>
+      </nav>
+
+      <section class="kpis" id="kpis" data-tab-panel="overview"></section>
+
+      <section class="panel" data-tab-panel="cashflow">
+        <div class="panel-header">
+          <h2 class="panel-title" data-i18n="transferBreakdown">Transfer In / Out Breakdown</h2>
+          <div class="panel-note" data-i18n="transferTransactions">Transfer transactions</div>
+        </div>
+        <div class="mini-grid" id="transferSummary"></div>
+        <div class="table-wrap" style="max-height: 260px;">
+          <table id="transferTable">
+            <thead>
+              <tr>
+                <th class="text" data-sort-key="date" data-i18n="date">Date</th>
+                <th class="text" data-sort-key="type" data-i18n="type">Type</th>
+                <th data-sort-key="amount" data-i18n="amount">Amount</th>
+                <th class="text" data-sort-key="description" data-i18n="description">Description</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel" data-tab-panel="cashflow">
+        <div class="panel-header">
+          <h2 class="panel-title" data-i18n="dividendInterestBreakdown">Dividend / Interest Breakdown</h2>
+          <div class="panel-note" data-i18n="incomeTransactions">Income transactions</div>
+        </div>
+        <div class="mini-grid" id="incomeSummary"></div>
+        <div class="table-wrap" style="max-height: 260px;">
+          <table id="incomeTable">
+            <thead>
+              <tr>
+                <th class="text" data-sort-key="date" data-i18n="date">Date</th>
+                <th class="text" data-sort-key="ticker" data-i18n="ticker">Ticker</th>
+                <th class="text" data-sort-key="type" data-i18n="type">Type</th>
+                <th data-sort-key="amount" data-i18n="amount">Amount</th>
+                <th class="text" data-sort-key="description" data-i18n="description">Description</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="chart-grid" data-tab-panel="overview">
+        <div class="chart-card">
+          <div class="panel-header">
+            <h2 class="panel-title" data-i18n="cashflowWinners">Cashflow PnL Winners</h2>
+            <div class="panel-note" data-i18n="top10">Top 10</div>
+          </div>
+          <div class="chart-body"><canvas id="cashflowWinnersChart"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="panel-header">
+            <h2 class="panel-title" data-i18n="cashflowLosers">Cashflow PnL Losers</h2>
+            <div class="panel-note" data-i18n="top10">Top 10</div>
+          </div>
+          <div class="chart-body"><canvas id="cashflowLosersChart"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="panel-header">
+            <h2 class="panel-title" data-i18n="cumulativeCashflow">Cumulative Cashflow</h2>
+            <div class="panel-note" data-i18n="hoverForValue">Hover for values</div>
+          </div>
+          <div class="chart-body"><canvas id="cumulativeChart"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="panel-header">
+            <h2 class="panel-title" data-i18n="activityBreakdown">Activity Breakdown</h2>
+            <div class="panel-note" data-i18n="transactionTypes">Transaction types</div>
+          </div>
+          <div class="chart-body"><canvas id="activityChart"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="panel-header">
+            <h2 class="panel-title" data-i18n="realizedWinners">Realized PnL Winners</h2>
+            <div class="panel-note" data-i18n="top10">Top 10</div>
+          </div>
+          <div class="chart-body"><canvas id="realizedWinnersChart"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="panel-header">
+            <h2 class="panel-title" data-i18n="realizedLosers">Realized PnL Losers</h2>
+            <div class="panel-note" data-i18n="top10">Top 10</div>
+          </div>
+          <div class="chart-body"><canvas id="realizedLosersChart"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="panel-header">
+            <h2 class="panel-title" data-i18n="optionTradesByMonth">Options Trade Count</h2>
+            <div class="panel-note" data-i18n="monthly">Monthly</div>
+          </div>
+          <div class="chart-body"><canvas id="optionTradesChart"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="panel-header">
+            <h2 class="panel-title" data-i18n="equityTradesByMonth">Equity Trade Count</h2>
+            <div class="panel-note" data-i18n="monthly">Monthly</div>
+          </div>
+          <div class="chart-body"><canvas id="equityTradesChart"></canvas></div>
+        </div>
+      </section>
+
+      <section class="chart-grid" data-tab-panel="options">
+        <div class="chart-card">
+          <div class="panel-header">
+            <h2 class="panel-title" data-i18n="optionStrategyPnl">Option Strategy PnL</h2>
+            <div class="panel-note" data-i18n="netOptionCashflow">Net option cashflow</div>
+          </div>
+          <div class="chart-body"><canvas id="optionStrategyPnlChart"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="panel-header">
+            <h2 class="panel-title" data-i18n="optionStrategyCount">Option Strategy Count</h2>
+            <div class="panel-note" data-i18n="lifecycles">Lifecycles</div>
+          </div>
+          <div class="chart-body"><canvas id="optionStrategyCountChart"></canvas></div>
+        </div>
+      </section>
+
+      <section class="panel" data-tab-panel="options">
+        <div class="panel-header">
+          <h2 class="panel-title" data-i18n="optionStrategyTable">Option Strategy Analysis</h2>
+          <div class="panel-note" data-i18n="strategyClassifierNote">Heuristic classification from option legs</div>
+        </div>
+        <div class="table-wrap" style="max-height: 420px;">
+          <table id="optionStrategyTable">
+            <thead>
+              <tr>
+                <th class="text" data-sort-key="strategy" data-i18n="strategy">Strategy</th>
+                <th data-sort-key="pnl" data-i18n="strategyPnl">Strategy PnL</th>
+                <th data-sort-key="lifecycles" data-i18n="lifecycles">Lifecycles</th>
+                <th data-sort-key="rolls" data-i18n="rolls">Rolls</th>
+                <th data-sort-key="openingGroups" data-i18n="openingGroups">Opening Groups</th>
+                <th data-sort-key="rows" data-i18n="optionRows">Option Rows</th>
+                <th data-sort-key="winners" data-i18n="winningLifecycles">Winning Lifecycles</th>
+                <th data-sort-key="losers" data-i18n="losingLifecycles">Losing Lifecycles</th>
+                <th data-sort-key="topTicker" data-i18n="topTicker">Top Ticker</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel" data-tab-panel="options">
+        <div class="panel-header">
+          <h2 class="panel-title" data-i18n="optionLifecycleBreakdown">Option Lifecycle Breakdown</h2>
+          <div class="panel-note" data-i18n="optionLifecycleNote">Exact-contract matches and rolls</div>
+        </div>
+        <div class="table-wrap" style="max-height: 460px;">
+          <table id="optionLifecycleTable">
+            <thead>
+              <tr>
+                <th class="text" data-lifecycle-sort="id" data-i18n="lifecycle">Lifecycle</th>
+                <th class="text" data-lifecycle-sort="strategy" data-i18n="strategy">Strategy</th>
+                <th class="text" data-lifecycle-sort="ticker" data-i18n="ticker">Ticker</th>
+                <th data-lifecycle-sort="pnl" data-i18n="strategyPnl">Strategy PnL</th>
+                <th data-lifecycle-sort="rolls" data-i18n="rolls">Rolls</th>
+                <th data-lifecycle-sort="openingGroups" data-i18n="openingGroups">Opening Groups</th>
+                <th data-lifecycle-sort="rows" data-i18n="optionRows">Option Rows</th>
+                <th data-lifecycle-sort="openLots" data-i18n="openLotsTitle">Open Lots</th>
+                <th class="text" data-lifecycle-sort="startDate" data-i18n="startDate">Start date</th>
+                <th class="text" data-lifecycle-sort="endDate" data-i18n="endDate">End date</th>
+                <th class="text" data-lifecycle-sort="status" data-i18n="status">Status</th>
+                <th class="text" data-lifecycle-sort="contracts" data-i18n="contracts">Contracts</th>
+                <th class="text" data-lifecycle-sort="lastAction" data-i18n="lastAction">Last Action</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div id="optionLifecycleDetail" class="lifecycle-detail"></div>
+      </section>
+
+      <section class="panel" data-tab-panel="wheel">
+        <div class="panel-header">
+          <h2 class="panel-title" data-i18n="wheelStrategyAnalysis">Wheel Strategy Analysis</h2>
+          <div class="panel-note" data-i18n="wheelStrategyNote">Short puts, assignments, stock, covered calls</div>
+        </div>
+        <div class="table-wrap" style="max-height: 460px;">
+          <table id="wheelTable">
+            <thead>
+              <tr>
+                <th class="text" data-sort-key="id" data-i18n="wheelId">Wheel ID</th>
+                <th class="text" data-sort-key="ticker" data-i18n="ticker">Ticker</th>
+                <th class="text" data-sort-key="status" data-i18n="status">Status</th>
+                <th data-sort-key="netPnl" data-i18n="netPnl">Net PnL</th>
+                <th data-sort-key="putPnl" data-i18n="shortPutPnl">Short Put PnL</th>
+                <th data-sort-key="callPnl" data-i18n="coveredCallPnl">Covered Call PnL</th>
+                <th data-sort-key="stockPnl" data-i18n="stockPnl">Stock PnL</th>
+                <th data-sort-key="dividends" data-i18n="divInterestShort">Div/Interest</th>
+                <th data-sort-key="shares" data-i18n="shares">Shares</th>
+                <th data-sort-key="avgCost" data-i18n="avgStockCost">Avg Stock Cost</th>
+                <th data-sort-key="assignments" data-i18n="assignments">Assignments</th>
+                <th class="text" data-sort-key="startDate" data-i18n="startDate">Start date</th>
+                <th class="text" data-sort-key="endDate" data-i18n="endDate">End date</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div id="wheelDetail" class="lifecycle-detail"></div>
+      </section>
+
+      <section class="panel" data-tab-panel="guide">
+        <div class="panel-header">
+          <h2 class="panel-title" data-i18n="pnlGuide">PnL Guide</h2>
+          <div class="panel-note" data-i18n="calculationNotes">Calculation notes</div>
+        </div>
+        <div class="explain-grid">
+          <div class="explain-item">
+            <h3 data-i18n="optionLifecycleMatching">Option Lifecycle Matching</h3>
+            <p data-i18n="optionLifecycleExplain">Option closes match the exact contract first. If an order closes one contract and opens another, v2 links it as a roll and keeps the PnL in the same strategy lifecycle.</p>
+          </div>
+          <div class="explain-item">
+            <h3 data-i18n="cashflowPnl">Cashflow PnL</h3>
+            <p data-i18n="cashflowExplain">Sum of CSV Total by ticker, including trade cashflows, fees, commissions, dividends, expirations, assignments, Wire Funds Received, and funds withdrawals. Example: sell option premium $100 minus $1 commission and $0.13 fee contributes $98.87 cashflow.</p>
+          </div>
+          <div class="explain-item">
+            <h3 data-i18n="realizedPnl">Realized PnL</h3>
+            <p data-i18n="realizedExplain">Closed-lot PnL from FIFO matching using net CSV Total values, so commissions and fees are included. Example: buy 10 shares for $500 total and later sell those 10 for $620 total gives $120 realized PnL.</p>
+          </div>
+          <div class="explain-item">
+            <h3 data-i18n="cumulativeCashflow">Cumulative Cashflow</h3>
+            <p data-i18n="cumulativeExplain">Running monthly sum of all CSV Total values. Example: January cashflow $200 followed by February -$50 shows cumulative values of $200 then $150.</p>
+          </div>
+          <div class="explain-item">
+            <h3 data-i18n="fifoClosedLots">FIFO Closed Lots</h3>
+            <p data-i18n="fifoExplain">First-in, first-out means the earliest open lot is matched first when a closing trade appears. Open/unmatched lots remain separate and are not marked to market.</p>
+          </div>
+        </div>
+      </section>
+
+      <div class="toolbar" data-tab-panel="tickers">
+        <input id="searchInput" class="control" placeholder="Filter ticker, symbol, or description" data-i18n-placeholder="filterPlaceholder">
+        <div class="segmented" aria-label="Table view" data-i18n-aria-label="tableView">
+          <button type="button" class="active" data-view="all" data-i18n="all">All</button>
+          <button type="button" data-view="winners" data-i18n="winners">Winners</button>
+          <button type="button" data-view="losers" data-i18n="losers">Losers</button>
+          <button type="button" data-view="open" data-i18n="open">Open</button>
+        </div>
+        <select id="sortSelect" class="select" title="Sort table" data-i18n-title="sortTableTitle">
+          <option value="cashflow:desc" data-i18n="sortCashflowDesc">Cashflow PnL ↓</option>
+          <option value="cashflow:asc" data-i18n="sortCashflowAsc">Cashflow PnL ↑</option>
+          <option value="realized:desc" data-i18n="sortRealizedDesc">Realized PnL ↓</option>
+          <option value="realized:asc" data-i18n="sortRealizedAsc">Realized PnL ↑</option>
+          <option value="ticker:asc" data-i18n="sortTickerAsc">Ticker A-Z</option>
+          <option value="trades:desc" data-i18n="sortTradeCountDesc">Trade Count ↓</option>
+        </select>
+      </div>
+
+      <section class="grid-main" data-tab-panel="tickers">
+        <div class="panel">
+          <div class="panel-header">
+            <h2 class="panel-title" data-i18n="tickerPnl">Ticker PnL</h2>
+            <div id="tableNote" class="panel-note"></div>
+          </div>
+          <div class="table-wrap">
+            <table id="tickerTable">
+              <thead>
+                <tr>
+                  <th data-sort="ticker" data-i18n="ticker">Ticker</th>
+                  <th data-sort="cashflow" data-i18n="cashflowPnl">Cashflow PnL</th>
+                  <th data-sort="realized" data-i18n="realizedPnl">Realized PnL</th>
+                  <th data-sort="openCarry" data-i18n="openCarry">Open Carry</th>
+                  <th data-sort="dividends" data-i18n="divInterestShort">Div/Interest</th>
+                  <th data-sort="fees" data-i18n="feesCommShort">Fees/Comm</th>
+                  <th data-sort="trades" data-i18n="trades">Trades</th>
+                  <th data-sort="equityTrades" data-i18n="equity">Equity</th>
+                  <th data-sort="optionTrades" data-i18n="options">Options</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+
+        <aside class="drill" id="drilldown"></aside>
+      </section>
+
+      <p class="footnote" data-i18n="footnote">Realized PnL uses FIFO matching from the CSV transactions only. Open positions are shown as carrying cashflow and are not marked to current market value.</p>
+      <div id="chartTooltip" class="chart-tooltip"></div>
+    </main>
+  </div>
+
+  <script>
+    const DEFAULT_CSV = "";
+    const CASH_TICKER = "(cash)";
+    const app = {
+      rows: [],
+      summary: null,
+      selectedTicker: null,
+      selectedLifecycleId: null,
+      sortKey: "cashflow",
+      sortDir: "desc",
+      lifecycleSortKey: "endDate",
+      lifecycleSortDir: "desc",
+      tableSorts: {
+        wheel: { key: "netPnl", dir: "desc" },
+        wheelDetail: { key: "date", dir: "desc" },
+        transfer: { key: "date", dir: "desc" },
+        income: { key: "date", dir: "desc" },
+        optionStrategy: { key: "pnl", dir: "desc" },
+        lifecycleDetail: { key: "date", dir: "desc" },
+        tickerTransactions: { key: "date", dir: "desc" }
+      },
+      view: "all",
+      search: "",
+      allRows: [],
+      periodPreset: "all",
+      periodStart: "",
+      periodEnd: "",
+      lang: localStorage.getItem("portfolioReviewLang") || "en",
+      lastSource: "",
+      chartHitAreas: new Map(),
+      drilldownTypeFilter: "all",
+      activeTab: "overview",
+      selectedWheelId: null
+    };
+
+    const els = {
+      status: document.getElementById("status"),
+      kpis: document.getElementById("kpis"),
+      fileInput: document.getElementById("fileInput"),
+      periodPreset: document.getElementById("periodPreset"),
+      periodStart: document.getElementById("periodStart"),
+      periodEnd: document.getElementById("periodEnd"),
+      languageSelect: document.getElementById("languageSelect"),
+      resetSelection: document.getElementById("resetSelection"),
+      searchInput: document.getElementById("searchInput"),
+      sortSelect: document.getElementById("sortSelect"),
+      tickerTable: document.getElementById("tickerTable"),
+      tableNote: document.getElementById("tableNote"),
+      drilldown: document.getElementById("drilldown"),
+      chartTooltip: document.getElementById("chartTooltip")
+    };
+
+    const moneyFormat = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 2 });
+    const numberFormat = new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 });
+    const wholeFormat = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
+
+    const translations = {
+      en: {
+        appTitle: "Tastytrade Portfolio Review v3",
+        subtitle: "Cashflow and realized PnL from your exported transaction history.",
+        dashboardTabs: "Dashboard tabs",
+        overviewTab: "Overview",
+        tickersTab: "Tickers",
+        cashflowTab: "Cashflow",
+        optionsTab: "Options",
+        wheelTab: "Wheel",
+        guideTab: "Guide",
+        loadCsv: "Load CSV",
+        loadCsvTitle: "Load a tastytrade CSV export",
+        clearTicker: "Clear Ticker",
+        clearTickerTitle: "Clear ticker drilldown",
+        datePeriod: "Date period",
+        allDates: "All Dates",
+        yearToDate: "Year to Date",
+        last12Months: "Last 12 Months",
+        customPeriod: "Custom",
+        startDate: "Start date",
+        endDate: "End date",
+        filterPlaceholder: "Filter ticker, symbol, or description",
+        tableView: "Table view",
+        sortTableTitle: "Sort table",
+        all: "All",
+        winners: "Winners",
+        losers: "Losers",
+        open: "Open",
+        sortCashflowDesc: "Cashflow PnL ↓",
+        sortCashflowAsc: "Cashflow PnL ↑",
+        sortRealizedDesc: "Realized PnL ↓",
+        sortRealizedAsc: "Realized PnL ↑",
+        sortTickerAsc: "Ticker A-Z",
+        sortTradeCountDesc: "Trade Count ↓",
+        tickerPnl: "Ticker PnL",
+        ticker: "Ticker",
+        cashflowPnl: "Cashflow PnL",
+        realizedPnl: "Realized PnL",
+        openCarry: "Open Carry",
+        divInterestShort: "Div/Interest",
+        feesCommShort: "Fees/Comm",
+        trades: "Trades",
+        equity: "Equity",
+        options: "Options",
+        cashflowWinners: "Cashflow PnL Winners",
+        cashflowLosers: "Cashflow PnL Losers",
+        realizedWinners: "Realized PnL Winners",
+        realizedLosers: "Realized PnL Losers",
+        optionTradesByMonth: "Options Trade Count",
+        equityTradesByMonth: "Equity Trade Count",
+        optionStrategyPnl: "Option Strategy PnL",
+        optionStrategyCount: "Option Strategy Count",
+        optionStrategyTable: "Option Strategy Analysis",
+        wheelStrategyAnalysis: "Wheel Strategy Analysis",
+        wheelStrategyNote: "Assignment-anchored short put, stock, covered call cycles",
+        wheelId: "Wheel ID",
+        netPnl: "Net PnL",
+        shortPutPnl: "Short Put PnL",
+        coveredCallPnl: "Covered Call PnL",
+        stockPnl: "Stock PnL",
+        shares: "Shares",
+        avgStockCost: "Avg Stock Cost",
+        assignments: "Assignments",
+        wheelRows: "Wheel Rows",
+        wheelDetailPrompt: "Click a wheel row to review the assigned short put, stock, covered call, and income transactions.",
+        relatedWheelTransactions: "Related Wheel Transactions",
+        openWheel: "Open Wheel",
+        closedWheel: "Closed Wheel",
+        optionLifecycleBreakdown: "Option Lifecycle Breakdown",
+        optionLifecycleNote: "Exact-contract matches and rolls",
+        netOptionCashflow: "Net option cashflow",
+        openingGroups: "Opening Groups",
+        lifecycles: "Lifecycles",
+        lifecycle: "Lifecycle",
+        rolls: "Rolls",
+        strategyClassifierNote: "Heuristic classification from option legs",
+        strategy: "Strategy",
+        strategyPnl: "Strategy PnL",
+        optionRows: "Option Rows",
+        winningLifecycles: "Winning Lifecycles",
+        losingLifecycles: "Losing Lifecycles",
+        topTicker: "Top Ticker",
+        sellNakedPut: "Sell Naked Put",
+        sellCoveredCall: "Sell Covered Call",
+        sellNakedCall: "Sell Naked Call",
+        bullPutSpread: "Bull Put Spread",
+        bearCallSpread: "Bear Call Spread",
+        jadeLizard: "Jade Lizard",
+        ironCondor: "Iron Condor",
+        shortStrangle: "Short Strangle",
+        longCall: "Long Call",
+        longPut: "Long Put",
+        unmatchedOptionClose: "Unmatched Option Close",
+        otherOptionStrategy: "Other Option Strategy",
+        optionLifecycleMatching: "Option Lifecycle Matching",
+        optionLifecycleExplain: "Option closes match the exact contract first. If an order closes one contract and opens another, v2 links it as a roll and keeps the PnL in the same strategy lifecycle.",
+        status: "Status",
+        openStatus: "Open",
+        closedStatus: "Closed",
+        contracts: "Contracts",
+        lastAction: "Last Action",
+        relatedTransactions: "Related Transactions",
+        selectLifecycle: "Click a lifecycle row to review the exact option transactions behind it.",
+        top10: "Top 10",
+        hoverForValue: "Hover for values",
+        topWinnersLosers: "Top Winners and Losers",
+        cumulativeCashflow: "Cumulative Cashflow",
+        monthly: "Monthly",
+        realizedByTicker: "Realized PnL by Ticker",
+        topAbsoluteValues: "Top absolute values",
+        activityBreakdown: "Activity Breakdown",
+        transactionTypes: "Transaction types",
+        pnlGuide: "PnL Guide",
+        calculationNotes: "Calculation notes",
+        cashflowExplain: "Sum of CSV Total by ticker, including trade cashflows, fees, commissions, dividends, expirations, assignments, Wire Funds Received, and funds withdrawals. Example: sell option premium $100 minus $1 commission and $0.13 fee contributes $98.87 cashflow.",
+        realizedExplain: "Closed-lot PnL from FIFO matching using net CSV Total values, so commissions and fees are included. Example: buy 10 shares for $500 total and later sell those 10 for $620 total gives $120 realized PnL.",
+        cumulativeExplain: "Running monthly sum of all CSV Total values. Example: January cashflow $200 followed by February -$50 shows cumulative values of $200 then $150.",
+        fifoClosedLots: "FIFO Closed Lots",
+        fifoExplain: "First-in, first-out means the earliest open lot is matched first when a closing trade appears. Open/unmatched lots remain separate and are not marked to market.",
+        footnote: "Cashflow PnL includes Wire Funds Received and funds withdrawals. Realized PnL uses FIFO matching from net CSV Total values, so commissions and fees are included. Unrealized PnL is not calculated because this CSV has no live prices.",
+        dateRange: "Date Range",
+        rows: "Rows",
+        csvTransactions: "CSV transactions",
+        rawTotalSum: "Raw total sum",
+        fifoClosedLots: "FIFO closed lots",
+        openLots: "open lots",
+        brokerageCosts: "Brokerage costs",
+        divInterest: "Div / Interest",
+        moneyMovements: "Money movements",
+        netTransfers: "Net Transfers",
+        wiresWithdrawals: "Wires / Withdrawals",
+        depositsWithdrawalsNote: "Received {deposits} / withdrawn {withdrawals}",
+        tickers: "Tickers",
+        normalizedUnderlyings: "Normalized underlyings",
+        tickersShown: "tickers shown",
+        transferBreakdown: "Transfer In / Out Breakdown",
+        transferTransactions: "Transfer transactions",
+        dividendInterestBreakdown: "Dividend / Interest Breakdown",
+        incomeTransactions: "Income transactions",
+        dividends: "Dividends",
+        interest: "Interest",
+        netIncome: "Net Income",
+        incomeCount: "Income Count",
+        transferIn: "Transfer In",
+        transferOut: "Transfer Out",
+        netTransfer: "Net Transfer",
+        transferCount: "Transfer Count",
+        amount: "Amount",
+        selectTicker: "Select a ticker to review transactions, open lots, and monthly PnL.",
+        drilldown: "Drilldown",
+        equityCashflow: "Equity Cashflow",
+        optionCashflow: "Option Cashflow",
+        openLotsTitle: "Open Lots",
+        unmatchedLots: "Unmatched FIFO lots",
+        transactions: "Transactions",
+        newestFirst: "Newest first",
+        date: "Date",
+        type: "Type",
+        filterType: "Filter Type",
+        allTypes: "All Types",
+        action: "Action",
+        symbol: "Symbol",
+        total: "Total",
+        value: "Value",
+        commissions: "Commissions",
+        fees: "Fees",
+        subtotal: "Subtotal",
+        description: "Description",
+        opened: "Opened",
+        side: "Side",
+        qty: "Qty",
+        carry: "Carry",
+        noOpenLots: "No open FIFO lots detected for this ticker.",
+        noData: "No data",
+        unknown: "Unknown",
+        loadedStatus: "Loaded {source}: {rows} rows, {tickers} normalized tickers. Cashflow reconciles to {cashflow}.",
+        fileStatus: "Use Load CSV to choose a tastytrade transaction export. No CSV filename is stored in this sanitized HTML.",
+        autoLoadFail: "Automatic CSV load is disabled in this sanitized HTML. Use Load CSV to choose an export.",
+        csvLoadFail: "Could not load CSV: {message}",
+        noCsvRows: "No CSV rows found."
+      },
+      zh: {
+        appTitle: "Tastytrade 投资组合复盘 v3",
+        subtitle: "基于导出的交易记录查看现金流 PnL 与已实现 PnL。",
+        dashboardTabs: "仪表板标签",
+        overviewTab: "总览",
+        tickersTab: "标的",
+        cashflowTab: "现金流",
+        optionsTab: "期权",
+        wheelTab: "Wheel",
+        guideTab: "说明",
+        loadCsv: "载入 CSV",
+        loadCsvTitle: "载入 tastytrade CSV 导出文件",
+        clearTicker: "清除标的",
+        clearTickerTitle: "清除标的详情",
+        datePeriod: "日期区间",
+        allDates: "全部日期",
+        yearToDate: "今年至今",
+        last12Months: "最近 12 个月",
+        customPeriod: "自定义",
+        startDate: "开始日期",
+        endDate: "结束日期",
+        filterPlaceholder: "筛选标的、代码或描述",
+        tableView: "表格视图",
+        sortTableTitle: "表格排序",
+        all: "全部",
+        winners: "盈利",
+        losers: "亏损",
+        open: "未平仓",
+        sortCashflowDesc: "现金流 PnL ↓",
+        sortCashflowAsc: "现金流 PnL ↑",
+        sortRealizedDesc: "已实现 PnL ↓",
+        sortRealizedAsc: "已实现 PnL ↑",
+        sortTickerAsc: "标的 A-Z",
+        sortTradeCountDesc: "交易次数 ↓",
+        tickerPnl: "标的 PnL",
+        ticker: "标的",
+        cashflowPnl: "现金流 PnL",
+        realizedPnl: "已实现 PnL",
+        openCarry: "未平仓账面现金流",
+        divInterestShort: "股息/利息",
+        feesCommShort: "费用/佣金",
+        trades: "交易",
+        equity: "股票",
+        options: "期权",
+        cashflowWinners: "现金流 PnL 盈利",
+        cashflowLosers: "现金流 PnL 亏损",
+        realizedWinners: "已实现 PnL 盈利",
+        realizedLosers: "已实现 PnL 亏损",
+        optionTradesByMonth: "期权月度交易次数",
+        equityTradesByMonth: "股票月度交易次数",
+        optionStrategyPnl: "期权策略 PnL",
+        optionStrategyCount: "期权策略次数",
+        optionStrategyTable: "期权策略分析",
+        wheelStrategyAnalysis: "Wheel 策略分析",
+        wheelStrategyNote: "以指派为锚点的卖 Put、股票、备兑 Call 周期",
+        wheelId: "Wheel ID",
+        netPnl: "净 PnL",
+        shortPutPnl: "卖 Put PnL",
+        coveredCallPnl: "备兑 Call PnL",
+        stockPnl: "股票 PnL",
+        shares: "股数",
+        avgStockCost: "平均股票成本",
+        assignments: "指派次数",
+        wheelRows: "Wheel 记录",
+        wheelDetailPrompt: "点击一个 Wheel 行，查看关联的被指派卖 Put、股票、备兑 Call 和收入交易。",
+        relatedWheelTransactions: "相关 Wheel 交易",
+        openWheel: "未结束 Wheel",
+        closedWheel: "已结束 Wheel",
+        optionLifecycleBreakdown: "期权生命周期明细",
+        optionLifecycleNote: "完全合约匹配与滚动/移仓",
+        netOptionCashflow: "期权净现金流",
+        openingGroups: "开仓组合",
+        lifecycles: "生命周期",
+        lifecycle: "生命周期",
+        rolls: "滚动/移仓",
+        strategyClassifierNote: "基于期权腿的启发式分类",
+        strategy: "策略",
+        strategyPnl: "策略 PnL",
+        optionRows: "期权记录",
+        winningLifecycles: "盈利生命周期",
+        losingLifecycles: "亏损生命周期",
+        topTicker: "主要标的",
+        sellNakedPut: "卖出裸 Put",
+        sellCoveredCall: "卖出备兑 Call",
+        sellNakedCall: "卖出裸 Call",
+        bullPutSpread: "牛市 Put 价差",
+        bearCallSpread: "熊市 Call 价差",
+        jadeLizard: "Jade Lizard",
+        ironCondor: "Iron Condor",
+        shortStrangle: "卖出跨式/宽跨式",
+        longCall: "买入 Call",
+        longPut: "买入 Put",
+        unmatchedOptionClose: "未匹配期权平仓",
+        otherOptionStrategy: "其他期权策略",
+        optionLifecycleMatching: "期权生命周期匹配",
+        optionLifecycleExplain: "期权平仓会先匹配完全相同的合约。如果同一订单平掉旧合约并开新合约，v2 会把它识别为滚动/移仓，并把 PnL 保留在同一个策略生命周期中。",
+        status: "状态",
+        openStatus: "未结束",
+        closedStatus: "已结束",
+        contracts: "合约",
+        lastAction: "最后操作",
+        relatedTransactions: "相关交易",
+        selectLifecycle: "点击一个生命周期行，查看背后的具体期权交易。",
+        top10: "前 10",
+        hoverForValue: "悬停查看数值",
+        topWinnersLosers: "盈利与亏损排行",
+        cumulativeCashflow: "累计现金流",
+        monthly: "按月",
+        realizedByTicker: "按标的已实现 PnL",
+        topAbsoluteValues: "按绝对值排行",
+        activityBreakdown: "活动分类",
+        transactionTypes: "交易类型",
+        pnlGuide: "PnL 说明",
+        calculationNotes: "计算说明",
+        cashflowExplain: "按标的汇总 CSV 的 Total，包含交易现金流、费用、佣金、股息、到期、指派、Wire Funds Received 和资金取出。例如：卖出期权权利金 $100，扣除 $1 佣金和 $0.13 费用后，现金流贡献为 $98.87。",
+        realizedExplain: "使用 CSV Total 的净额按 FIFO 匹配平仓批次计算，因此已包含佣金和费用。例如：买入 10 股总成本 $500，之后卖出这 10 股总收入 $620，则已实现 PnL 为 $120。",
+        cumulativeExplain: "按月累计所有 CSV Total。例如：1 月现金流 $200，2 月 -$50，则累计值为 $200、$150。",
+        fifoClosedLots: "FIFO 已平仓批次",
+        fifoExplain: "FIFO 即先进先出：出现平仓交易时，优先匹配最早的开仓批次。未匹配批次单独保留，不按当前市价盯市。",
+        footnote: "现金流 PnL 包含 Wire Funds Received 和资金取出。已实现 PnL 使用 CSV Total 净额按 FIFO 匹配计算，因此已包含佣金和费用。由于 CSV 没有实时价格，因此不计算未实现 PnL。",
+        dateRange: "日期范围",
+        rows: "记录数",
+        csvTransactions: "CSV 交易记录",
+        rawTotalSum: "原始 Total 合计",
+        fifoClosedLots: "FIFO 已平仓批次",
+        openLots: "个未平仓批次",
+        brokerageCosts: "交易成本",
+        divInterest: "股息 / 利息",
+        moneyMovements: "资金流水",
+        netTransfers: "净转入/转出",
+        wiresWithdrawals: "入金 / 出金",
+        depositsWithdrawalsNote: "入金 {deposits} / 出金 {withdrawals}",
+        tickers: "标的数",
+        normalizedUnderlyings: "标准化标的",
+        tickersShown: "个标的显示",
+        transferBreakdown: "转入 / 转出明细",
+        transferTransactions: "转账交易",
+        dividendInterestBreakdown: "股息 / 利息明细",
+        incomeTransactions: "收入交易",
+        dividends: "股息",
+        interest: "利息",
+        netIncome: "净收入",
+        incomeCount: "收入次数",
+        transferIn: "转入",
+        transferOut: "转出",
+        netTransfer: "净转入/转出",
+        transferCount: "转账次数",
+        amount: "金额",
+        selectTicker: "选择一个标的查看交易、未平仓批次和月度 PnL。",
+        drilldown: "详情",
+        equityCashflow: "股票现金流",
+        optionCashflow: "期权现金流",
+        openLotsTitle: "未平仓批次",
+        unmatchedLots: "未匹配 FIFO 批次",
+        transactions: "交易明细",
+        newestFirst: "最新优先",
+        date: "日期",
+        type: "类型",
+        filterType: "筛选类型",
+        allTypes: "全部类型",
+        action: "操作",
+        symbol: "代码",
+        total: "总额",
+        value: "成交金额",
+        commissions: "佣金",
+        fees: "费用",
+        subtotal: "小计",
+        description: "描述",
+        opened: "开仓日",
+        side: "方向",
+        qty: "数量",
+        carry: "账面现金流",
+        noOpenLots: "该标的未检测到未平仓 FIFO 批次。",
+        noData: "暂无数据",
+        unknown: "未知",
+        loadedStatus: "已载入 {source}：{rows} 行，{tickers} 个标准化标的。现金流核对为 {cashflow}。",
+        fileStatus: "请使用“载入 CSV”选择 tastytrade 交易导出文件。此 sanitized HTML 不保存 CSV 文件名。",
+        autoLoadFail: "此 sanitized HTML 已停用自动载入 CSV。请使用“载入 CSV”选择导出文件。",
+        csvLoadFail: "无法载入 CSV：{message}",
+        noCsvRows: "没有找到 CSV 记录。"
+      }
+    };
+
+    function t(key, params = {}) {
+      const template = translations[app.lang]?.[key] || translations.en[key] || key;
+      return Object.entries(params).reduce((text, [name, value]) => text.replaceAll(`{${name}}`, value), template);
+    }
+
+    function applyLanguage() {
+      document.documentElement.lang = app.lang === "zh" ? "zh-CN" : "en";
+      document.title = t("appTitle");
+      els.languageSelect.value = app.lang;
+      document.querySelectorAll("[data-i18n]").forEach(el => {
+        el.textContent = t(el.dataset.i18n);
+      });
+      document.querySelectorAll("[data-i18n-title]").forEach(el => {
+        el.title = t(el.dataset.i18nTitle);
+      });
+      document.querySelectorAll("[data-i18n-placeholder]").forEach(el => {
+        el.placeholder = t(el.dataset.i18nPlaceholder);
+      });
+      document.querySelectorAll("[data-i18n-aria-label]").forEach(el => {
+        el.setAttribute("aria-label", t(el.dataset.i18nAriaLabel));
+      });
+    }
+
+    function parseCSV(text) {
+      const rows = [];
+      let row = [];
+      let cell = "";
+      let quoted = false;
+      for (let i = 0; i < text.length; i++) {
+        const char = text[i];
+        const next = text[i + 1];
+        if (quoted) {
+          if (char === '"' && next === '"') {
+            cell += '"';
+            i++;
+          } else if (char === '"') {
+            quoted = false;
+          } else {
+            cell += char;
+          }
+        } else if (char === '"') {
+          quoted = true;
+        } else if (char === ",") {
+          row.push(cell);
+          cell = "";
+        } else if (char === "\n") {
+          row.push(cell);
+          rows.push(row);
+          row = [];
+          cell = "";
+        } else if (char !== "\r") {
+          cell += char;
+        }
+      }
+      if (cell.length || row.length) {
+        row.push(cell);
+        rows.push(row);
+      }
+      const headers = rows.shift().map(h => h.trim());
+      return rows
+        .filter(r => r.some(v => String(v || "").trim()))
+        .map(r => Object.fromEntries(headers.map((h, i) => [h, r[i] ?? ""])));
+    }
+
+    function toNumber(value) {
+      const clean = String(value ?? "").trim().replaceAll(",", "");
+      if (!clean || clean === "--") return 0;
+      const parsed = Number(clean);
+      return Number.isFinite(parsed) ? parsed : 0;
+    }
+
+    function parseDate(value) {
+      const clean = String(value || "").replace(/([+-]\d{2})(\d{2})$/, "$1:$2");
+      const date = new Date(clean);
+      return Number.isNaN(date.valueOf()) ? null : date;
+    }
+
+    function dateKey(date) {
+      if (!date) return "";
+      return date.toISOString().slice(0, 10);
+    }
+
+    function monthKey(date) {
+      if (!date) return t("unknown");
+      return date.toISOString().slice(0, 7);
+    }
+
+    function normalizeRow(row, index) {
+      const date = parseDate(row.Date);
+      const instrument = row["Instrument Type"].trim();
+      const type = row.Type.trim();
+      const subType = row["Sub Type"].trim();
+      const action = row.Action.trim();
+      const symbol = row.Symbol.trim();
+      const root = row["Root Symbol"].trim();
+      const underlying = row["Underlying Symbol"].trim();
+      const ticker = underlying || root || symbol || CASH_TICKER;
+      const total = toNumber(row.Total);
+      const value = toNumber(row.Value);
+      const quantity = Math.abs(toNumber(row.Quantity));
+      const fees = toNumber(row.Fees);
+      const commissions = toNumber(row.Commissions);
+      const optionKey = instrument === "Equity Option"
+        ? [symbol, row["Expiration Date"].trim(), row["Strike Price"].trim(), row["Call or Put"].trim()].join("|")
+        : "";
+      return {
+        raw: row,
+        index,
+        date,
+        dateText: row.Date,
+        day: dateKey(date),
+        month: monthKey(date),
+        type,
+        subType,
+        action,
+        symbol,
+        root,
+        underlying,
+        ticker,
+        instrument,
+        description: row.Description.trim(),
+        total,
+        value,
+        quantity,
+        fees,
+        commissions,
+        feeTotal: fees + commissions,
+        multiplier: toNumber(row.Multiplier) || (instrument === "Equity Option" ? 100 : 1),
+        optionKey,
+        expiration: row["Expiration Date"].trim(),
+        strike: row["Strike Price"].trim(),
+        callPut: row["Call or Put"].trim(),
+        currency: row.Currency.trim()
+      };
+    }
+
+    function emptyTicker(ticker) {
+      return {
+        ticker,
+        rows: [],
+        cashflow: 0,
+        realized: 0,
+        openCarry: 0,
+        dividends: 0,
+        fees: 0,
+        trades: 0,
+        equityTrades: 0,
+        optionTrades: 0,
+        tradeCashflow: 0,
+        equityCashflow: 0,
+        optionCashflow: 0,
+        openLots: [],
+        realizedEvents: []
+      };
+    }
+
+    function lotId(row) {
+      return row.instrument === "Equity Option" ? row.optionKey : row.symbol || row.ticker;
+    }
+
+    function makeLot(row, side, qty, amount) {
+      return {
+        id: lotId(row),
+        ticker: row.ticker,
+        instrument: row.instrument,
+        symbol: row.symbol || row.ticker,
+        side,
+        qty,
+        remaining: qty,
+        amount: Math.abs(amount),
+        remainingAmount: Math.abs(amount),
+        opened: row.date,
+        openedText: row.dateText,
+        description: row.description
+      };
+    }
+
+    function consumeLots(lots, row, side, closeAmount, realizedEvents, realizedByTicker) {
+      let qtyLeft = row.quantity || 0;
+      let closeLeft = Math.abs(closeAmount);
+      const candidates = lots.filter(l => l.ticker === row.ticker && l.id === lotId(row) && l.side === side && l.remaining > 1e-9);
+      let realized = 0;
+      for (const lot of candidates) {
+        if (qtyLeft <= 1e-9) break;
+        const take = Math.min(qtyLeft, lot.remaining);
+        const qtyRatio = lot.remaining ? take / lot.remaining : 0;
+        const lotBasis = lot.remainingAmount * qtyRatio;
+        const closeShare = (row.quantity ? Math.abs(closeAmount) * (take / row.quantity) : closeLeft);
+        const pnl = side === "short" ? lotBasis - closeShare : closeShare - lotBasis;
+        lot.remaining -= take;
+        lot.remainingAmount -= lotBasis;
+        qtyLeft -= take;
+        closeLeft -= closeShare;
+        realized += pnl;
+        realizedEvents.push({
+          date: row.date,
+          dateText: row.dateText,
+          ticker: row.ticker,
+          symbol: row.symbol,
+          qty: take,
+          pnl,
+          opened: lot.openedText,
+          closed: row.dateText,
+          description: row.description
+        });
+      }
+      if (Math.abs(realized) > 1e-9) {
+        realizedByTicker.set(row.ticker, (realizedByTicker.get(row.ticker) || 0) + realized);
+      }
+    }
+
+    function optionStrategyKey(openRows, equityPosition) {
+      const shortPuts = openRows.filter(r => r.action === "SELL_TO_OPEN" && r.callPut === "PUT");
+      const longPuts = openRows.filter(r => r.action === "BUY_TO_OPEN" && r.callPut === "PUT");
+      const shortCalls = openRows.filter(r => r.action === "SELL_TO_OPEN" && r.callPut === "CALL");
+      const longCalls = openRows.filter(r => r.action === "BUY_TO_OPEN" && r.callPut === "CALL");
+      if (shortPuts.length && longPuts.length && shortCalls.length && longCalls.length) return "ironCondor";
+      if (shortPuts.length && shortCalls.length && longCalls.length) return "jadeLizard";
+      if (shortPuts.length && shortCalls.length && !longPuts.length && !longCalls.length) return "shortStrangle";
+      if (shortPuts.length && longPuts.length) return "bullPutSpread";
+      if (shortCalls.length && longCalls.length) return "bearCallSpread";
+      if (shortPuts.length && !longPuts.length && !shortCalls.length && !longCalls.length) return "sellNakedPut";
+      if (shortCalls.length && !longCalls.length && !shortPuts.length && !longPuts.length) {
+        return equityPosition > 0 ? "sellCoveredCall" : "sellNakedCall";
+      }
+      if (longCalls.length && !shortCalls.length && !shortPuts.length && !longPuts.length) return "longCall";
+      if (longPuts.length && !shortPuts.length && !shortCalls.length && !longCalls.length) return "longPut";
+      return "otherOptionStrategy";
+    }
+
+    function emptyStrategy(key) {
+      return {
+        key,
+        pnl: 0,
+        rows: 0,
+        openingGroups: 0,
+        lifecycles: 0,
+        rolls: 0,
+        winners: 0,
+        losers: 0,
+        byTicker: new Map()
+      };
+    }
+
+    function addStrategyValue(map, key, row, total, countRow = true) {
+      if (!map.has(key)) map.set(key, emptyStrategy(key));
+      const item = map.get(key);
+      item.pnl += total;
+      if (countRow) item.rows += 1;
+      if (total > 0.004) item.winners += 1;
+      if (total < -0.004) item.losers += 1;
+      item.byTicker.set(row.ticker, (item.byTicker.get(row.ticker) || 0) + total);
+    }
+
+    function matchLifecycleLots(optionLots, row, side) {
+      let qtyLeft = row.quantity || 0;
+      const matches = [];
+      for (const lot of optionLots) {
+        if (qtyLeft <= 1e-9) break;
+        if (lot.id !== row.optionKey || lot.side !== side || lot.remaining <= 1e-9) continue;
+        const take = Math.min(lot.remaining, qtyLeft);
+        lot.remaining = Math.max(0, lot.remaining - take);
+        qtyLeft -= take;
+        matches.push({ lifecycleId: lot.lifecycleId, quantity: take });
+      }
+      return matches;
+    }
+
+    function fallbackOptionStrategy(row, equityPosition) {
+      if (row.callPut === "PUT" && (row.action === "SELL_TO_OPEN" || row.action === "BUY_TO_CLOSE")) return "sellNakedPut";
+      if (row.callPut === "CALL" && (row.action === "SELL_TO_OPEN" || row.action === "BUY_TO_CLOSE")) {
+        return equityPosition > 0 ? "sellCoveredCall" : "sellNakedCall";
+      }
+      if (row.callPut === "CALL") return "longCall";
+      if (row.callPut === "PUT") return "longPut";
+      return "otherOptionStrategy";
+    }
+
+    function unmatchedCloseStrategy(row) {
+      return "unmatchedOptionClose";
+    }
+
+    function optionGroupKey(row) {
+      return row.raw["Order #"] || `${row.dateText}|${row.ticker}`;
+    }
+
+    function analyzeOptionStrategies(rows) {
+      const strategyMap = new Map();
+      const optionLots = [];
+      const lifecycles = new Map();
+      const equityPosition = new Map();
+      const equityActivity = new Set(rows.filter(row => row.instrument === "Equity").map(row => row.ticker));
+      let nextLifecycleId = 1;
+
+      function makeLifecycle(strategy, row) {
+        const id = `L${nextLifecycleId++}`;
+        lifecycles.set(id, {
+          id,
+          strategy,
+          ticker: row.ticker,
+          pnl: 0,
+          rows: 0,
+          openingGroups: 1,
+          rolls: 0,
+          winners: 0,
+          losers: 0,
+          startDate: row.date || null,
+          endDate: row.date || null,
+          lastAction: row.subType || row.action || row.type || "",
+          openLots: 0,
+          contracts: new Map(),
+          transactions: []
+        });
+        return id;
+      }
+
+      function ensureStrategy(key) {
+        if (!strategyMap.has(key)) strategyMap.set(key, emptyStrategy(key));
+        return strategyMap.get(key);
+      }
+
+      function addLifecycleValue(lifecycleId, row, ratio = 1) {
+        const lifecycle = lifecycles.get(lifecycleId);
+        if (!lifecycle) return;
+        const lifecycleRow = ratio === 1 ? row : {
+          ...row,
+          value: row.value * ratio,
+          commissions: row.commissions * ratio,
+          fees: row.fees * ratio,
+          feeTotal: row.feeTotal * ratio,
+          total: row.total * ratio,
+          quantity: row.quantity * ratio
+        };
+        lifecycle.pnl += lifecycleRow.total;
+        lifecycle.rows += 1;
+        lifecycle.transactions.push(lifecycleRow);
+        if (lifecycleRow.date && (!lifecycle.startDate || lifecycleRow.date < lifecycle.startDate)) lifecycle.startDate = lifecycleRow.date;
+        if (lifecycleRow.date && (!lifecycle.endDate || lifecycleRow.date > lifecycle.endDate)) lifecycle.endDate = lifecycleRow.date;
+        lifecycle.lastAction = lifecycleRow.subType || lifecycleRow.action || lifecycleRow.type || lifecycle.lastAction;
+        const contractLabel = lifecycleRow.symbol || lifecycleRow.optionKey || "-";
+        const contract = lifecycle.contracts.get(contractLabel) || { rows: 0, total: 0 };
+        contract.rows += 1;
+        contract.total += lifecycleRow.total;
+        lifecycle.contracts.set(contractLabel, contract);
+        if (lifecycleRow.total > 0.004) lifecycle.winners += 1;
+        if (lifecycleRow.total < -0.004) lifecycle.losers += 1;
+      }
+
+      function attachOpeningLot(row, lifecycleId) {
+        optionLots.push({
+          id: row.optionKey,
+          side: row.action === "SELL_TO_OPEN" ? "short" : "long",
+          remaining: row.quantity || 0,
+          lifecycleId
+        });
+      }
+
+      for (let i = 0; i < rows.length;) {
+        const row = rows[i];
+        if (row.instrument === "Equity") {
+          const current = equityPosition.get(row.ticker) || 0;
+          if (row.action === "BUY_TO_OPEN") equityPosition.set(row.ticker, current + row.quantity);
+          if (row.action === "SELL_TO_CLOSE") equityPosition.set(row.ticker, current - row.quantity);
+          i += 1;
+          continue;
+        }
+        if (row.instrument !== "Equity Option") {
+          i += 1;
+          continue;
+        }
+        const key = optionGroupKey(row);
+        const group = [];
+        while (i < rows.length && rows[i].instrument === "Equity Option" && optionGroupKey(rows[i]) === key) {
+          group.push(rows[i]);
+          i += 1;
+        }
+        const openRows = group.filter(r => r.action === "SELL_TO_OPEN" || r.action === "BUY_TO_OPEN");
+        const closeRows = group.filter(r => r.action === "BUY_TO_CLOSE" || r.action === "SELL_TO_CLOSE" || r.subType === "Expiration" || r.subType === "Assignment");
+        const coveredCandidate = (equityPosition.get(group[0].ticker) || 0) > 0 || equityActivity.has(group[0].ticker);
+        const groupStrategy = openRows.length ? optionStrategyKey(openRows, coveredCandidate ? 1 : 0) : null;
+        const closedLifecycleIds = [];
+        for (const closeRow of closeRows) {
+          let matches = [];
+          if (closeRow.action === "BUY_TO_CLOSE") matches = matchLifecycleLots(optionLots, closeRow, "short");
+          if (closeRow.action === "SELL_TO_CLOSE") matches = matchLifecycleLots(optionLots, closeRow, "long");
+          if (!matches.length && (closeRow.subType === "Expiration" || closeRow.subType === "Assignment")) {
+            matches = [
+              ...matchLifecycleLots(optionLots, closeRow, "short"),
+              ...matchLifecycleLots(optionLots, closeRow, "long")
+            ];
+          }
+          if (!matches.length) {
+            const fallback = unmatchedCloseStrategy(closeRow);
+            matches = [{ lifecycleId: makeLifecycle(fallback, closeRow), quantity: closeRow.quantity || 1 }];
+          }
+          const totalMatchedQty = matches.reduce((sum, match) => sum + match.quantity, 0) || closeRow.quantity || 1;
+          for (const match of matches) {
+            const ratio = match.quantity / totalMatchedQty;
+            closedLifecycleIds.push(match.lifecycleId);
+            addLifecycleValue(match.lifecycleId, closeRow, ratio);
+          }
+        }
+        let rollLifecycleId = closedLifecycleIds[0] || null;
+        if (rollLifecycleId && openRows.length) {
+          const lifecycle = lifecycles.get(rollLifecycleId);
+          lifecycle.rolls += 1;
+          lifecycle.openingGroups += 1;
+        }
+        let newLifecycleId = rollLifecycleId;
+        if (!newLifecycleId && openRows.length) {
+          newLifecycleId = makeLifecycle(groupStrategy || fallbackOptionStrategy(openRows[0], coveredCandidate ? 1 : 0), openRows[0]);
+        }
+        for (const optionRow of group) {
+          if (optionRow.action === "SELL_TO_OPEN" || optionRow.action === "BUY_TO_OPEN") {
+            attachOpeningLot(optionRow, newLifecycleId);
+            addLifecycleValue(newLifecycleId, optionRow);
+          }
+        }
+      }
+      const openLotsByLifecycle = new Map();
+      for (const lot of optionLots) {
+        if (lot.remaining > 1e-9) {
+          openLotsByLifecycle.set(lot.lifecycleId, (openLotsByLifecycle.get(lot.lifecycleId) || 0) + 1);
+        }
+      }
+      for (const lifecycle of lifecycles.values()) {
+        lifecycle.openLots = openLotsByLifecycle.get(lifecycle.id) || 0;
+        const item = ensureStrategy(lifecycle.strategy);
+        item.pnl += lifecycle.pnl;
+        item.rows += lifecycle.rows;
+        item.openingGroups += lifecycle.openingGroups;
+        item.lifecycles += 1;
+        item.rolls += lifecycle.rolls;
+        item.winners += lifecycle.pnl > 0.004 ? 1 : 0;
+        item.losers += lifecycle.pnl < -0.004 ? 1 : 0;
+        item.byTicker.set(lifecycle.ticker, (item.byTicker.get(lifecycle.ticker) || 0) + lifecycle.pnl);
+      }
+      const strategies = [...strategyMap.values()]
+        .map(item => {
+          const topTicker = [...item.byTicker.entries()].sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]))[0];
+          return { ...item, topTicker: topTicker ? topTicker[0] : "-" };
+        })
+        .sort((a, b) => Math.abs(b.pnl) - Math.abs(a.pnl));
+      const lifecycleRows = [...lifecycles.values()]
+        .map(lifecycle => ({
+          ...lifecycle,
+          contracts: [...lifecycle.contracts.entries()]
+            .map(([symbol, detail]) => ({ symbol, rows: detail.rows, total: detail.total }))
+            .sort((a, b) => Math.abs(b.total) - Math.abs(a.total)),
+          transactions: [...lifecycle.transactions].sort((a, b) => (a.date || 0) - (b.date || 0) || a.index - b.index),
+          statusKey: lifecycle.openLots > 0 ? "openStatus" : "closedStatus"
+        }))
+        .sort((a, b) => (b.endDate || 0) - (a.endDate || 0) || Math.abs(b.pnl) - Math.abs(a.pnl));
+      return { strategies, lifecycles: lifecycleRows };
+    }
+
+    function emptyWheelCycle(id, ticker, row) {
+      return {
+        id,
+        ticker,
+        statusKey: "openWheel",
+        startDate: row?.date || null,
+        endDate: row?.date || null,
+        rows: [],
+        netPnl: 0,
+        putPnl: 0,
+        callPnl: 0,
+        stockPnl: 0,
+        dividends: 0,
+        fees: 0,
+        shares: 0,
+        assignedShares: 0,
+        stockCost: 0,
+        stockProceeds: 0,
+        assignments: 0,
+        openPutQty: 0,
+        openCallQty: 0,
+        avgCost: 0
+      };
+    }
+
+    function wheelComponent(row) {
+      if (row.instrument === "Equity Option" && row.callPut === "PUT") return "Short Put";
+      if (row.instrument === "Equity Option" && row.callPut === "CALL") return "Covered Call";
+      if (row.instrument === "Equity") return "Stock";
+      if (row.subType === "Dividend" || row.subType.includes("Interest")) return "Div/Interest";
+      return row.subType || row.type;
+    }
+
+    function addWheelRow(cycle, row, component) {
+      const tagged = { ...row, wheelComponent: component || wheelComponent(row) };
+      cycle.rows.push(tagged);
+      cycle.netPnl += row.total;
+      cycle.fees += row.feeTotal || 0;
+      if (row.date && (!cycle.startDate || row.date < cycle.startDate)) cycle.startDate = row.date;
+      if (row.date && (!cycle.endDate || row.date > cycle.endDate)) cycle.endDate = row.date;
+    }
+
+    function analyzeWheelStrategies(rows, optionLifecycles) {
+      const cycles = [];
+      const usedStockRows = new Set();
+      let nextId = 1;
+
+      function addUniqueWheelRow(cycle, row, component) {
+        const key = row.index ?? `${row.dateText}|${row.symbol}|${row.total}|${cycle.rows.length}`;
+        if (cycle._rowKeys.has(key)) return;
+        cycle._rowKeys.add(key);
+        addWheelRow(cycle, row, component);
+      }
+
+      function sameTickerSameDay(row, reference) {
+        return row.ticker === reference.ticker && row.day === reference.day;
+      }
+
+      function isAfterAssignment(row, assignment) {
+        if (!row.date || !assignment.date) return row.index !== assignment.index;
+        if (row.date > assignment.date) return true;
+        if (row.date < assignment.date) return false;
+        return row.index > assignment.index;
+      }
+
+      const assignedPutLifecycles = optionLifecycles
+        .map(lifecycle => ({
+          lifecycle,
+          assignment: lifecycle.transactions.find(row =>
+            row.instrument === "Equity Option" &&
+            row.callPut === "PUT" &&
+            row.subType === "Assignment"
+          )
+        }))
+        .filter(item => item.assignment)
+        .sort((a, b) => (a.assignment.date || 0) - (b.assignment.date || 0) || a.assignment.index - b.assignment.index);
+
+      for (const { lifecycle, assignment } of assignedPutLifecycles) {
+        const cycle = emptyWheelCycle(`W${nextId++}`, assignment.ticker, assignment);
+        cycle._rowKeys = new Set();
+        cycles.push(cycle);
+
+        for (const row of lifecycle.transactions) {
+          addUniqueWheelRow(cycle, row, "Short Put");
+          cycle.putPnl += row.total;
+          if (row.subType === "Assignment") cycle.assignments += 1;
+        }
+
+        const assignedStockRow = rows.find(row =>
+          !usedStockRows.has(row.index) &&
+          row.instrument === "Equity" &&
+          row.action === "BUY_TO_OPEN" &&
+          row.type === "Receive Deliver" &&
+          sameTickerSameDay(row, assignment)
+        );
+        if (assignedStockRow) {
+          usedStockRows.add(assignedStockRow.index);
+          addUniqueWheelRow(cycle, assignedStockRow, "Stock");
+          cycle.stockPnl += assignedStockRow.total;
+          cycle.stockCost += assignedStockRow.total;
+          cycle.shares += assignedStockRow.quantity || 0;
+          cycle.assignedShares += assignedStockRow.quantity || 0;
+        } else {
+          const inferredShares = (assignment.quantity || 0) * (assignment.multiplier || 100);
+          cycle.shares += inferredShares;
+          cycle.assignedShares += inferredShares;
+        }
+
+        for (const row of rows) {
+          if (row.ticker !== cycle.ticker || !isAfterAssignment(row, assignment)) continue;
+          const isIncome = row.subType === "Dividend" || row.subType.includes("Interest");
+          const isCoveredCallRow = row.instrument === "Equity Option" && row.callPut === "CALL" && (
+            row.action === "SELL_TO_OPEN" ||
+            row.action === "BUY_TO_CLOSE" ||
+            row.subType === "Expiration" ||
+            row.subType === "Assignment"
+          );
+          const isStockSale = row.instrument === "Equity" && row.action === "SELL_TO_CLOSE";
+
+          if (isCoveredCallRow && (cycle.shares > 1e-9 || cycle.openCallQty > 1e-9)) {
+            addUniqueWheelRow(cycle, row, "Covered Call");
+            cycle.callPnl += row.total;
+            if (row.action === "SELL_TO_OPEN") cycle.openCallQty += row.quantity || 0;
+            if (row.action === "BUY_TO_CLOSE" || row.subType === "Expiration" || row.subType === "Assignment") {
+              cycle.openCallQty = Math.max(0, cycle.openCallQty - (row.quantity || 0));
+            }
+            if (row.subType === "Assignment") cycle.assignments += 1;
+          } else if (isStockSale && cycle.shares > 1e-9) {
+            addUniqueWheelRow(cycle, row, "Stock");
+            cycle.stockPnl += row.total;
+            cycle.stockProceeds += row.total;
+            cycle.shares = Math.max(0, cycle.shares - (row.quantity || 0));
+          } else if (isIncome && cycle.shares > 1e-9) {
+            addUniqueWheelRow(cycle, row, "Div/Interest");
+            cycle.dividends += row.total;
+          }
+
+          if (cycle.shares <= 1e-9 && cycle.openCallQty <= 1e-9) break;
+        }
+      }
+
+      for (const cycle of cycles) {
+        cycle.avgCost = cycle.assignedShares > 0 && cycle.stockCost ? Math.abs(cycle.stockCost) / cycle.assignedShares : 0;
+        cycle.statusKey = cycle.shares > 1e-9 || cycle.openCallQty > 1e-9 ? "openWheel" : "closedWheel";
+        delete cycle._rowKeys;
+      }
+
+      return cycles.sort((a, b) => Math.abs(b.netPnl) - Math.abs(a.netPnl));
+    }
+
+    function analyze(rows) {
+      const normalized = rows.map(normalizeRow).sort((a, b) => (a.date || 0) - (b.date || 0) || a.index - b.index);
+      const optionStrategyAnalysis = analyzeOptionStrategies(normalized);
+      const optionStrategies = optionStrategyAnalysis.strategies;
+      const optionLifecycles = optionStrategyAnalysis.lifecycles;
+      const wheelCycles = analyzeWheelStrategies(normalized, optionLifecycles);
+      const byTicker = new Map();
+      const lots = [];
+      const realizedByTicker = new Map();
+      const realizedEvents = [];
+      const monthlyCashflow = new Map();
+      const monthlyRealized = new Map();
+      const monthlyOptionTrades = new Map();
+      const monthlyEquityTrades = new Map();
+      const activity = new Map();
+      let totalCashflow = 0;
+      let totalFees = 0;
+      let totalDividends = 0;
+      let totalInterest = 0;
+      let totalWireFundsReceived = 0;
+      let totalFundsWithdrawals = 0;
+      const transferRows = [];
+      const incomeRows = [];
+      let minDate = null;
+      let maxDate = null;
+
+      for (const row of normalized) {
+        if (!byTicker.has(row.ticker)) byTicker.set(row.ticker, emptyTicker(row.ticker));
+        const ticker = byTicker.get(row.ticker);
+        ticker.rows.push(row);
+        ticker.cashflow += row.total;
+        totalCashflow += row.total;
+        totalFees += row.feeTotal;
+        ticker.fees += row.feeTotal;
+        if (row.type === "Trade") {
+          ticker.trades += 1;
+          ticker.tradeCashflow += row.total;
+          if (row.instrument === "Equity") {
+            ticker.equityTrades += 1;
+            ticker.equityCashflow += row.total;
+            monthlyEquityTrades.set(row.month, (monthlyEquityTrades.get(row.month) || 0) + 1);
+          }
+          if (row.instrument === "Equity Option") {
+            ticker.optionTrades += 1;
+            ticker.optionCashflow += row.total;
+            monthlyOptionTrades.set(row.month, (monthlyOptionTrades.get(row.month) || 0) + 1);
+          }
+        }
+        if (row.subType === "Dividend" || row.subType.includes("Interest")) {
+          ticker.dividends += row.total;
+          totalDividends += row.total;
+          if (row.subType.includes("Interest")) totalInterest += row.total;
+          incomeRows.push(row);
+        }
+        if (row.type === "Money Movement" && (row.subType === "Deposit" || row.description.includes("Wire Funds Received"))) {
+          totalWireFundsReceived += row.total;
+          transferRows.push({ ...row, transferType: "in" });
+        }
+        if (row.type === "Money Movement" && (row.subType === "Withdrawal" || row.description.toLowerCase().includes("withdraw"))) {
+          totalFundsWithdrawals += row.total;
+          transferRows.push({ ...row, transferType: "out" });
+        }
+        if (row.date) {
+          minDate = !minDate || row.date < minDate ? row.date : minDate;
+          maxDate = !maxDate || row.date > maxDate ? row.date : maxDate;
+        }
+        monthlyCashflow.set(row.month, (monthlyCashflow.get(row.month) || 0) + row.total);
+        activity.set(row.type || "(blank)", (activity.get(row.type || "(blank)") || 0) + 1);
+
+        const isSplit = row.subType.includes("Split");
+        if (row.type === "Receive Deliver" && isSplit) {
+          continue;
+        }
+
+        if (row.instrument === "Equity") {
+          if (row.action === "BUY_TO_OPEN") {
+            lots.push(makeLot(row, "long", row.quantity, row.total));
+          } else if (row.action === "SELL_TO_CLOSE") {
+            consumeLots(lots, row, "long", row.total, realizedEvents, realizedByTicker);
+          }
+        } else if (row.instrument === "Equity Option") {
+          if (row.action === "SELL_TO_OPEN") {
+            lots.push(makeLot(row, "short", row.quantity, row.total));
+          } else if (row.action === "BUY_TO_OPEN") {
+            lots.push(makeLot(row, "long", row.quantity, row.total));
+          } else if (row.action === "BUY_TO_CLOSE") {
+            consumeLots(lots, row, "short", row.total, realizedEvents, realizedByTicker);
+          } else if (row.action === "SELL_TO_CLOSE") {
+            consumeLots(lots, row, "long", row.total, realizedEvents, realizedByTicker);
+          }
+          if (row.subType === "Expiration") {
+            consumeLots(lots, row, "short", 0, realizedEvents, realizedByTicker);
+            consumeLots(lots, row, "long", 0, realizedEvents, realizedByTicker);
+          }
+          if (row.subType === "Assignment") {
+            consumeLots(lots, row, "short", 0, realizedEvents, realizedByTicker);
+            consumeLots(lots, row, "long", 0, realizedEvents, realizedByTicker);
+          }
+        }
+      }
+
+      for (const event of realizedEvents) {
+        const key = monthKey(event.date);
+        monthlyRealized.set(key, (monthlyRealized.get(key) || 0) + event.pnl);
+      }
+
+      for (const [tickerName, ticker] of byTicker.entries()) {
+        ticker.realized = realizedByTicker.get(tickerName) || 0;
+        ticker.openLots = lots
+          .filter(l => l.ticker === tickerName && l.remaining > 1e-8)
+          .map(l => ({ ...l }));
+        ticker.openCarry = ticker.openLots.reduce((sum, lot) => sum + (lot.side === "short" ? lot.remainingAmount : -lot.remainingAmount), 0);
+        ticker.realizedEvents = realizedEvents.filter(e => e.ticker === tickerName);
+      }
+
+      return {
+        rows: normalized,
+        byTicker,
+        tickers: [...byTicker.values()],
+        lots: lots.filter(l => l.remaining > 1e-8),
+        realizedEvents,
+        totalCashflow,
+        totalRealized: [...realizedByTicker.values()].reduce((sum, value) => sum + value, 0),
+        totalFees,
+        totalDividends,
+        totalInterest,
+        totalWireFundsReceived,
+        totalFundsWithdrawals,
+        transferRows,
+        incomeRows,
+        minDate,
+        maxDate,
+        monthlyCashflow,
+        monthlyRealized,
+        monthlyOptionTrades,
+        monthlyEquityTrades,
+        activity,
+        optionStrategies,
+        optionLifecycles,
+        wheelCycles,
+        currencies: [...new Set(normalized.map(r => r.currency).filter(Boolean))]
+      };
+    }
+
+    function formatMoney(value) {
+      const text = moneyFormat.format(value || 0);
+      return Math.abs(value || 0) < 0.005 ? "$0.00" : text;
+    }
+
+    function moneyClass(value) {
+      if (value > 0.004) return "gain";
+      if (value < -0.004) return "loss";
+      return "neutral";
+    }
+
+    function fmtDate(date) {
+      if (!date) return t("unknown");
+      return date.toLocaleDateString(app.lang === "zh" ? "zh-CN" : "en-US", { year: "numeric", month: "short", day: "2-digit" });
+    }
+
+    function setStatus(message) {
+      els.status.innerHTML = message;
+    }
+
+    function renderKpis() {
+      const s = app.summary;
+      const openCarry = s.lots.reduce((sum, lot) => sum + (lot.side === "short" ? lot.remainingAmount : -lot.remainingAmount), 0);
+      const kpis = [
+        [t("dateRange"), `${fmtDate(s.minDate)} - ${fmtDate(s.maxDate)}`, `${s.currencies.join(", ") || "USD"}`, 0],
+        [t("rows"), wholeFormat.format(s.rows.length), t("csvTransactions"), 0],
+        [t("cashflowPnl"), formatMoney(s.totalCashflow), t("rawTotalSum"), s.totalCashflow],
+        [t("realizedPnl"), formatMoney(s.totalRealized), t("fifoClosedLots"), s.totalRealized],
+        [t("openCarry"), formatMoney(openCarry), `${wholeFormat.format(s.lots.length)} ${t("openLots")}`, openCarry],
+        [t("feesCommShort"), formatMoney(s.totalFees), t("brokerageCosts"), s.totalFees],
+        [t("divInterest"), formatMoney(s.totalDividends), t("moneyMovements"), s.totalDividends],
+        [t("netTransfers"), formatMoney(s.totalWireFundsReceived + s.totalFundsWithdrawals), t("depositsWithdrawalsNote", { deposits: formatMoney(s.totalWireFundsReceived), withdrawals: formatMoney(s.totalFundsWithdrawals) }), s.totalWireFundsReceived + s.totalFundsWithdrawals],
+        [t("tickers"), wholeFormat.format(s.tickers.length), t("normalizedUnderlyings"), 0]
+      ];
+      els.kpis.innerHTML = kpis.map(([label, value, note, numericValue]) => `
+        <div class="kpi">
+          <div class="kpi-label">${escapeHtml(label)}</div>
+          <div class="kpi-value ${moneyClass(numericValue)}">${escapeHtml(value)}</div>
+          <div class="kpi-note">${escapeHtml(note)}</div>
+        </div>
+      `).join("");
+    }
+
+    function parseMoneyDisplay(value) {
+      return Number(String(value).replace(/[^0-9.-]/g, "")) || 0;
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" }[c]));
+    }
+
+    function displayFileName(name) {
+      const text = String(name || "");
+      if (text.length <= 34) return escapeHtml(text);
+      return `${escapeHtml(text.slice(0, 18))}...${escapeHtml(text.slice(-12))}`;
+    }
+
+    function localDateValue(date) {
+      if (!date) return "";
+      const copy = new Date(date);
+      copy.setMinutes(copy.getMinutes() - copy.getTimezoneOffset());
+      return copy.toISOString().slice(0, 10);
+    }
+
+    function rowDateValue(row) {
+      const date = parseDate(row.Date);
+      return date ? localDateValue(date) : "";
+    }
+
+    function loadedDateBounds(rows) {
+      const dates = rows.map(row => parseDate(row.Date)).filter(Boolean).sort((a, b) => a - b);
+      return { min: dates[0] || null, max: dates[dates.length - 1] || null };
+    }
+
+    function setPeriodFromPreset() {
+      const { max } = loadedDateBounds(app.allRows);
+      if (!max || app.periodPreset === "custom") return;
+      if (app.periodPreset === "all") {
+        app.periodStart = "";
+        app.periodEnd = "";
+      } else if (app.periodPreset === "ytd") {
+        app.periodStart = `${max.getFullYear()}-01-01`;
+        app.periodEnd = localDateValue(max);
+      } else if (app.periodPreset === "last12") {
+        const start = new Date(max);
+        start.setMonth(start.getMonth() - 12);
+        app.periodStart = localDateValue(start);
+        app.periodEnd = localDateValue(max);
+      }
+      els.periodStart.value = app.periodStart;
+      els.periodEnd.value = app.periodEnd;
+    }
+
+    function updatePeriodControlVisibility() {
+      const custom = app.periodPreset === "custom";
+      els.periodStart.classList.toggle("hidden-control", !custom);
+      els.periodEnd.classList.toggle("hidden-control", !custom);
+      els.periodPreset.parentElement.classList.toggle("custom", custom);
+    }
+
+    function periodFilteredRows() {
+      if (!app.periodStart && !app.periodEnd) return app.allRows;
+      return app.allRows.filter(row => {
+        const value = rowDateValue(row);
+        if (!value) return false;
+        if (app.periodStart && value < app.periodStart) return false;
+        if (app.periodEnd && value > app.periodEnd) return false;
+        return true;
+      });
+    }
+
+    function refreshForPeriod() {
+      app.rows = periodFilteredRows();
+      app.summary = analyze(app.rows);
+      app.selectedTicker = null;
+      app.selectedLifecycleId = null;
+      app.selectedWheelId = null;
+      app.drilldownTypeFilter = "all";
+      setLoadedStatus();
+      renderAll();
+    }
+
+    function filteredTickers() {
+      let tickers = app.summary.tickers.filter(t => t.ticker !== CASH_TICKER);
+      if (app.view === "winners") tickers = tickers.filter(t => t.cashflow > 0 || t.realized > 0);
+      if (app.view === "losers") tickers = tickers.filter(t => t.cashflow < 0 || t.realized < 0);
+      if (app.view === "open") tickers = tickers.filter(t => t.openLots.length > 0);
+      const term = app.search.trim().toLowerCase();
+      if (term) {
+        tickers = tickers.filter(t => {
+          const haystack = [t.ticker, ...t.rows.slice(-8).map(r => `${r.symbol} ${r.description}`)].join(" ").toLowerCase();
+          return haystack.includes(term);
+        });
+      }
+      const factor = app.sortDir === "asc" ? 1 : -1;
+      tickers.sort((a, b) => {
+        const av = a[app.sortKey];
+        const bv = b[app.sortKey];
+        if (app.sortKey === "ticker") return String(av).localeCompare(String(bv)) * factor;
+        return ((av || 0) - (bv || 0)) * factor;
+      });
+      return tickers;
+    }
+
+    function renderTickerTable() {
+      const tickers = filteredTickers();
+      els.tableNote.textContent = `${wholeFormat.format(tickers.length)} ${t("tickersShown")}`;
+      const tbody = els.tickerTable.querySelector("tbody");
+      tbody.innerHTML = tickers.map(t => `
+        <tr data-ticker="${escapeHtml(t.ticker)}" class="${app.selectedTicker === t.ticker ? "selected" : ""}">
+          <td class="ticker-cell">${escapeHtml(t.ticker)}</td>
+          <td class="${moneyClass(t.cashflow)}">${formatMoney(t.cashflow)}</td>
+          <td class="${moneyClass(t.realized)}">${formatMoney(t.realized)}</td>
+          <td class="${moneyClass(t.openCarry)}">${formatMoney(t.openCarry)}</td>
+          <td class="${moneyClass(t.dividends)}">${formatMoney(t.dividends)}</td>
+          <td class="${moneyClass(t.fees)}">${formatMoney(t.fees)}</td>
+          <td>${wholeFormat.format(t.trades)}</td>
+          <td>${wholeFormat.format(t.equityTrades)}</td>
+          <td>${wholeFormat.format(t.optionTrades)}</td>
+        </tr>
+      `).join("");
+      tbody.querySelectorAll("tr").forEach(row => {
+        row.addEventListener("click", () => {
+          if (app.selectedTicker !== row.dataset.ticker) {
+            app.drilldownTypeFilter = "all";
+          }
+          app.selectedTicker = row.dataset.ticker;
+          renderAll();
+        });
+      });
+    }
+
+    function renderTransferBreakdown() {
+      if (!app.summary) return;
+      const transferIn = app.summary.totalWireFundsReceived;
+      const transferOut = app.summary.totalFundsWithdrawals;
+      const net = transferIn + transferOut;
+      const rows = sortedRows(app.summary.transferRows, "transfer", row => ({
+        date: row.date,
+        type: row.transferType === "in" ? t("transferIn") : t("transferOut"),
+        amount: row.total,
+        description: row.description || row.subType
+      }));
+      const summary = document.getElementById("transferSummary");
+      if (summary) {
+        summary.innerHTML = `
+          <div class="mini"><div class="mini-label">${escapeHtml(t("transferIn"))}</div><div class="mini-value ${moneyClass(transferIn)}">${formatMoney(transferIn)}</div></div>
+          <div class="mini"><div class="mini-label">${escapeHtml(t("transferOut"))}</div><div class="mini-value ${moneyClass(transferOut)}">${formatMoney(transferOut)}</div></div>
+          <div class="mini"><div class="mini-label">${escapeHtml(t("netTransfer"))}</div><div class="mini-value ${moneyClass(net)}">${formatMoney(net)}</div></div>
+          <div class="mini"><div class="mini-label">${escapeHtml(t("transferCount"))}</div><div class="mini-value">${wholeFormat.format(rows.length)}</div></div>
+        `;
+      }
+      const tbody = document.querySelector("#transferTable tbody");
+      if (!tbody) return;
+      wireSortableHeaders("#transferTable", "transfer", renderTransferBreakdown);
+      tbody.innerHTML = rows.map(row => `
+        <tr>
+          <td class="text">${escapeHtml(fmtDate(row.date))}</td>
+          <td class="text">${escapeHtml(row.transferType === "in" ? t("transferIn") : t("transferOut"))}</td>
+          <td class="${moneyClass(row.total)}">${formatMoney(row.total)}</td>
+          <td class="text">${escapeHtml(row.description || row.subType)}</td>
+        </tr>
+      `).join("");
+    }
+
+    function renderIncomeBreakdown() {
+      if (!app.summary) return;
+      const rows = sortedRows(app.summary.incomeRows, "income", row => ({
+        date: row.date,
+        ticker: row.ticker === CASH_TICKER ? "-" : row.ticker,
+        type: row.subType,
+        amount: row.total,
+        description: row.description
+      }));
+      const interest = app.summary.totalInterest;
+      const dividends = app.summary.totalDividends - app.summary.totalInterest;
+      const net = app.summary.totalDividends;
+      const summary = document.getElementById("incomeSummary");
+      if (summary) {
+        summary.innerHTML = `
+          <div class="mini"><div class="mini-label">${escapeHtml(t("dividends"))}</div><div class="mini-value ${moneyClass(dividends)}">${formatMoney(dividends)}</div></div>
+          <div class="mini"><div class="mini-label">${escapeHtml(t("interest"))}</div><div class="mini-value ${moneyClass(interest)}">${formatMoney(interest)}</div></div>
+          <div class="mini"><div class="mini-label">${escapeHtml(t("netIncome"))}</div><div class="mini-value ${moneyClass(net)}">${formatMoney(net)}</div></div>
+          <div class="mini"><div class="mini-label">${escapeHtml(t("incomeCount"))}</div><div class="mini-value">${wholeFormat.format(rows.length)}</div></div>
+        `;
+      }
+      const tbody = document.querySelector("#incomeTable tbody");
+      if (!tbody) return;
+      wireSortableHeaders("#incomeTable", "income", renderIncomeBreakdown);
+      tbody.innerHTML = rows.map(row => `
+        <tr>
+          <td class="text">${escapeHtml(fmtDate(row.date))}</td>
+          <td class="text">${escapeHtml(row.ticker === CASH_TICKER ? "-" : row.ticker)}</td>
+          <td class="text">${escapeHtml(row.subType)}</td>
+          <td class="${moneyClass(row.total)}">${formatMoney(row.total)}</td>
+          <td class="text">${escapeHtml(row.description)}</td>
+        </tr>
+      `).join("");
+    }
+
+    function renderOptionStrategyTable() {
+      const tbody = document.querySelector("#optionStrategyTable tbody");
+      if (!tbody || !app.summary) return;
+      const rows = sortedRows(app.summary.optionStrategies, "optionStrategy", strategy => ({
+        strategy: t(strategy.key),
+        pnl: strategy.pnl,
+        lifecycles: strategy.lifecycles,
+        rolls: strategy.rolls,
+        openingGroups: strategy.openingGroups,
+        rows: strategy.rows,
+        winners: strategy.winners,
+        losers: strategy.losers,
+        topTicker: strategy.topTicker
+      }));
+      wireSortableHeaders("#optionStrategyTable", "optionStrategy", renderOptionStrategyTable);
+      renderSortState("#optionStrategyTable", "optionStrategy");
+      tbody.innerHTML = rows.map(strategy => `
+        <tr>
+          <td class="text ticker-cell">${escapeHtml(t(strategy.key))}</td>
+          <td class="${moneyClass(strategy.pnl)}">${formatMoney(strategy.pnl)}</td>
+          <td>${wholeFormat.format(strategy.lifecycles)}</td>
+          <td>${wholeFormat.format(strategy.rolls)}</td>
+          <td>${wholeFormat.format(strategy.openingGroups)}</td>
+          <td>${wholeFormat.format(strategy.rows)}</td>
+          <td class="gain">${wholeFormat.format(strategy.winners)}</td>
+          <td class="loss">${wholeFormat.format(strategy.losers)}</td>
+          <td>${escapeHtml(strategy.topTicker)}</td>
+        </tr>
+      `).join("");
+    }
+
+    function comparableValue(value) {
+      if (value instanceof Date) return value.getTime();
+      if (typeof value === "number") return value;
+      return String(value ?? "").toLowerCase();
+    }
+
+    function compareValues(a, b, dir) {
+      const av = comparableValue(a);
+      const bv = comparableValue(b);
+      const factor = dir === "asc" ? 1 : -1;
+      if (typeof av === "number" && typeof bv === "number") return (av - bv) * factor;
+      return String(av).localeCompare(String(bv)) * factor;
+    }
+
+    function sortedRows(rows, tableKey, valueGetter) {
+      const sort = app.tableSorts[tableKey];
+      if (!sort) return [...rows];
+      return [...rows].sort((a, b) => {
+        const av = valueGetter(a)[sort.key];
+        const bv = valueGetter(b)[sort.key];
+        const result = compareValues(av, bv, sort.dir);
+        return result || ((b.index || 0) - (a.index || 0));
+      });
+    }
+
+    function renderSortState(tableSelector, tableKey) {
+      const sort = app.tableSorts[tableKey];
+      document.querySelectorAll(`${tableSelector} th[data-sort-key]`).forEach(th => {
+        th.classList.remove("sorted-asc", "sorted-desc");
+        if (sort && th.dataset.sortKey === sort.key) {
+          th.classList.add(sort.dir === "asc" ? "sorted-asc" : "sorted-desc");
+        }
+      });
+    }
+
+    function wireSortableHeaders(tableSelector, tableKey, renderFn) {
+      document.querySelectorAll(`${tableSelector} th[data-sort-key]`).forEach(th => {
+        if (th.dataset.sortWired === "true") return;
+        th.dataset.sortWired = "true";
+        th.addEventListener("click", () => {
+          const sort = app.tableSorts[tableKey];
+          const key = th.dataset.sortKey;
+          sort.dir = sort.key === key && sort.dir === "desc" ? "asc" : "desc";
+          sort.key = key;
+          renderFn();
+        });
+      });
+      renderSortState(tableSelector, tableKey);
+    }
+
+    function lifecycleSortValue(lifecycle, key) {
+      if (key === "id") return parseInt(lifecycle.id.replace(/\D/g, ""), 10) || 0;
+      if (key === "strategy") return t(lifecycle.strategy);
+      if (key === "status") return lifecycle.openLots > 0 ? 1 : 0;
+      if (key === "contracts") return lifecycle.contracts.length;
+      if (key === "startDate" || key === "endDate") return lifecycle[key] ? lifecycle[key].getTime() : 0;
+      return lifecycle[key];
+    }
+
+    function sortedOptionLifecycles() {
+      const direction = app.lifecycleSortDir === "asc" ? 1 : -1;
+      return [...app.summary.optionLifecycles].sort((a, b) => {
+        const av = lifecycleSortValue(a, app.lifecycleSortKey);
+        const bv = lifecycleSortValue(b, app.lifecycleSortKey);
+        if (typeof av === "string" || typeof bv === "string") {
+          return String(av || "").localeCompare(String(bv || "")) * direction;
+        }
+        return ((av || 0) - (bv || 0)) * direction;
+      });
+    }
+
+    function renderLifecycleSortState() {
+      document.querySelectorAll("#optionLifecycleTable th[data-lifecycle-sort]").forEach(th => {
+        th.classList.remove("sorted-asc", "sorted-desc");
+        if (th.dataset.lifecycleSort === app.lifecycleSortKey) {
+          th.classList.add(app.lifecycleSortDir === "asc" ? "sorted-asc" : "sorted-desc");
+        }
+      });
+    }
+
+    function renderOptionLifecycleTable() {
+      const tbody = document.querySelector("#optionLifecycleTable tbody");
+      if (!tbody || !app.summary) return;
+      renderLifecycleSortState();
+      tbody.innerHTML = sortedOptionLifecycles().map(lifecycle => {
+        const contractParts = lifecycle.contracts.map(contract =>
+          `${contract.symbol} (${contract.rows}, ${formatMoney(contract.total)})`
+        );
+        const visibleContracts = contractParts.slice(0, 3).join("; ");
+        const contractText = contractParts.length > 3 ? `${visibleContracts}; +${contractParts.length - 3}` : visibleContracts;
+        return `
+          <tr class="clickable-row ${app.selectedLifecycleId === lifecycle.id ? "selected" : ""}" data-lifecycle-id="${escapeHtml(lifecycle.id)}">
+            <td class="text ticker-cell">${escapeHtml(lifecycle.id)}</td>
+            <td class="text">${escapeHtml(t(lifecycle.strategy))}</td>
+            <td class="text">${escapeHtml(lifecycle.ticker)}</td>
+            <td class="${moneyClass(lifecycle.pnl)}">${formatMoney(lifecycle.pnl)}</td>
+            <td>${wholeFormat.format(lifecycle.rolls)}</td>
+            <td>${wholeFormat.format(lifecycle.openingGroups)}</td>
+            <td>${wholeFormat.format(lifecycle.rows)}</td>
+            <td>${wholeFormat.format(lifecycle.openLots)}</td>
+            <td class="text">${escapeHtml(fmtDate(lifecycle.startDate))}</td>
+            <td class="text">${escapeHtml(fmtDate(lifecycle.endDate))}</td>
+            <td class="text">${escapeHtml(t(lifecycle.statusKey))}</td>
+            <td class="text" title="${escapeHtml(contractParts.join("; "))}">${escapeHtml(contractText || "-")}</td>
+            <td class="text">${escapeHtml(lifecycle.lastAction || "-")}</td>
+          </tr>
+        `;
+      }).join("");
+      tbody.querySelectorAll("tr[data-lifecycle-id]").forEach(row => {
+        row.addEventListener("click", () => {
+          app.selectedLifecycleId = app.selectedLifecycleId === row.dataset.lifecycleId ? null : row.dataset.lifecycleId;
+          renderOptionLifecycleTable();
+          renderOptionLifecycleDetail();
+        });
+      });
+      renderOptionLifecycleDetail();
+    }
+
+    function renderOptionLifecycleDetail() {
+      const detail = document.getElementById("optionLifecycleDetail");
+      if (!detail || !app.summary) return;
+      const lifecycle = app.selectedLifecycleId
+        ? app.summary.optionLifecycles.find(item => item.id === app.selectedLifecycleId)
+        : null;
+      if (!lifecycle) {
+        detail.innerHTML = `<div class="empty">${escapeHtml(t("selectLifecycle"))}</div>`;
+        return;
+      }
+      const transactionRows = sortedRows(lifecycle.transactions, "lifecycleDetail", row => ({
+        date: row.date,
+        type: row.subType || row.type,
+        action: row.action || "-",
+        symbol: row.symbol || row.optionKey || "-",
+        qty: row.quantity || 0,
+        value: row.value,
+        commissions: row.commissions,
+        fees: row.fees,
+        total: row.total,
+        description: row.description || ""
+      }));
+      const totals = lifecycle.transactions.reduce((sum, row) => {
+        sum.value += row.value;
+        sum.commissions += row.commissions;
+        sum.fees += row.fees;
+        sum.total += row.total;
+        return sum;
+      }, { value: 0, commissions: 0, fees: 0, total: 0 });
+      detail.innerHTML = `
+        <div class="panel-header">
+          <h3 class="panel-title">${escapeHtml(lifecycle.id)} ${escapeHtml(t("relatedTransactions"))}</h3>
+          <div class="panel-note">${escapeHtml(t(lifecycle.strategy))} · ${escapeHtml(lifecycle.ticker)} · ${formatMoney(lifecycle.pnl)}</div>
+        </div>
+        <div class="mini-grid">
+          <div class="mini"><div class="mini-label">${escapeHtml(t("value"))}</div><div class="mini-value ${moneyClass(totals.value)}">${formatMoney(totals.value)}</div></div>
+          <div class="mini"><div class="mini-label">${escapeHtml(t("commissions"))}</div><div class="mini-value ${moneyClass(totals.commissions)}">${formatMoney(totals.commissions)}</div></div>
+          <div class="mini"><div class="mini-label">${escapeHtml(t("fees"))}</div><div class="mini-value ${moneyClass(totals.fees)}">${formatMoney(totals.fees)}</div></div>
+          <div class="mini"><div class="mini-label">${escapeHtml(t("total"))}</div><div class="mini-value ${moneyClass(totals.total)}">${formatMoney(totals.total)}</div></div>
+        </div>
+        <div class="table-wrap" style="max-height: 300px;">
+          <table id="lifecycleTransactionsTable">
+            <thead>
+              <tr>
+                <th class="text" data-sort-key="date">${escapeHtml(t("date"))}</th>
+                <th class="text" data-sort-key="type">${escapeHtml(t("type"))}</th>
+                <th class="text" data-sort-key="action">${escapeHtml(t("action"))}</th>
+                <th class="text" data-sort-key="symbol">${escapeHtml(t("symbol"))}</th>
+                <th data-sort-key="qty">${escapeHtml(t("qty"))}</th>
+                <th data-sort-key="value">${escapeHtml(t("value"))}</th>
+                <th data-sort-key="commissions">${escapeHtml(t("commissions"))}</th>
+                <th data-sort-key="fees">${escapeHtml(t("fees"))}</th>
+                <th data-sort-key="total">${escapeHtml(t("total"))}</th>
+                <th class="text" data-sort-key="description">${escapeHtml(t("description"))}</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${transactionRows.map(row => `
+                <tr>
+                  <td class="text">${escapeHtml(fmtDate(row.date))}</td>
+                  <td class="text">${escapeHtml(row.subType || row.type)}</td>
+                  <td class="text">${escapeHtml(row.action || "-")}</td>
+                  <td class="text">${escapeHtml(row.symbol || row.optionKey || "-")}</td>
+                  <td>${numberFormat.format(row.quantity || 0)}</td>
+                  <td class="${moneyClass(row.value)}">${formatMoney(row.value)}</td>
+                  <td class="${moneyClass(row.commissions)}">${formatMoney(row.commissions)}</td>
+                  <td class="${moneyClass(row.fees)}">${formatMoney(row.fees)}</td>
+                  <td class="${moneyClass(row.total)}">${formatMoney(row.total)}</td>
+                  <td class="text">${escapeHtml(row.description || "")}</td>
+                </tr>
+              `).join("")}
+            </tbody>
+            <tfoot>
+              <tr>
+                <th class="text" colspan="5">${escapeHtml(t("subtotal"))}</th>
+                <th class="${moneyClass(totals.value)}">${formatMoney(totals.value)}</th>
+                <th class="${moneyClass(totals.commissions)}">${formatMoney(totals.commissions)}</th>
+                <th class="${moneyClass(totals.fees)}">${formatMoney(totals.fees)}</th>
+                <th class="${moneyClass(totals.total)}">${formatMoney(totals.total)}</th>
+                <th></th>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      `;
+      wireSortableHeaders("#lifecycleTransactionsTable", "lifecycleDetail", renderOptionLifecycleDetail);
+    }
+
+    function renderWheelTable() {
+      const tbody = document.querySelector("#wheelTable tbody");
+      if (!tbody || !app.summary) return;
+      const rows = sortedRows(app.summary.wheelCycles, "wheel", cycle => ({
+        id: parseInt(cycle.id.replace(/\D/g, ""), 10) || 0,
+        ticker: cycle.ticker,
+        status: t(cycle.statusKey),
+        netPnl: cycle.netPnl,
+        putPnl: cycle.putPnl,
+        callPnl: cycle.callPnl,
+        stockPnl: cycle.stockPnl,
+        dividends: cycle.dividends,
+        shares: cycle.shares,
+        avgCost: cycle.avgCost,
+        assignments: cycle.assignments,
+        startDate: cycle.startDate,
+        endDate: cycle.endDate
+      }));
+      wireSortableHeaders("#wheelTable", "wheel", renderWheelTable);
+      tbody.innerHTML = rows.map(cycle => `
+        <tr class="clickable-row ${app.selectedWheelId === cycle.id ? "selected" : ""}" data-wheel-id="${escapeHtml(cycle.id)}">
+          <td class="text ticker-cell">${escapeHtml(cycle.id)}</td>
+          <td class="text">${escapeHtml(cycle.ticker)}</td>
+          <td class="text">${escapeHtml(t(cycle.statusKey))}</td>
+          <td class="${moneyClass(cycle.netPnl)}">${formatMoney(cycle.netPnl)}</td>
+          <td class="${moneyClass(cycle.putPnl)}">${formatMoney(cycle.putPnl)}</td>
+          <td class="${moneyClass(cycle.callPnl)}">${formatMoney(cycle.callPnl)}</td>
+          <td class="${moneyClass(cycle.stockPnl)}">${formatMoney(cycle.stockPnl)}</td>
+          <td class="${moneyClass(cycle.dividends)}">${formatMoney(cycle.dividends)}</td>
+          <td>${numberFormat.format(cycle.shares)}</td>
+          <td>${cycle.avgCost ? formatMoney(cycle.avgCost) : "-"}</td>
+          <td>${wholeFormat.format(cycle.assignments)}</td>
+          <td class="text">${escapeHtml(fmtDate(cycle.startDate))}</td>
+          <td class="text">${escapeHtml(fmtDate(cycle.endDate))}</td>
+        </tr>
+      `).join("");
+      tbody.querySelectorAll("tr[data-wheel-id]").forEach(row => {
+        row.addEventListener("click", () => {
+          app.selectedWheelId = app.selectedWheelId === row.dataset.wheelId ? null : row.dataset.wheelId;
+          renderWheelTable();
+          renderWheelDetail();
+        });
+      });
+      renderWheelDetail();
+    }
+
+    function renderWheelDetail() {
+      const detail = document.getElementById("wheelDetail");
+      if (!detail || !app.summary) return;
+      const cycle = app.selectedWheelId
+        ? app.summary.wheelCycles.find(item => item.id === app.selectedWheelId)
+        : null;
+      if (!cycle) {
+        detail.innerHTML = `<div class="empty">${escapeHtml(t("wheelDetailPrompt"))}</div>`;
+        return;
+      }
+      const rows = sortedRows(cycle.rows, "wheelDetail", row => ({
+        date: row.date,
+        component: row.wheelComponent,
+        type: row.subType || row.type,
+        action: row.action || "-",
+        symbol: row.symbol || row.optionKey || "-",
+        qty: row.quantity || 0,
+        value: row.value,
+        commissions: row.commissions,
+        fees: row.fees,
+        total: row.total,
+        description: row.description || ""
+      }));
+      const totals = cycle.rows.reduce((sum, row) => {
+        sum.value += row.value;
+        sum.commissions += row.commissions;
+        sum.fees += row.fees;
+        sum.total += row.total;
+        return sum;
+      }, { value: 0, commissions: 0, fees: 0, total: 0 });
+      detail.innerHTML = `
+        <div class="panel-header">
+          <h3 class="panel-title">${escapeHtml(cycle.id)} ${escapeHtml(t("relatedWheelTransactions"))}</h3>
+          <div class="panel-note">${escapeHtml(cycle.ticker)} · ${escapeHtml(t(cycle.statusKey))} · ${formatMoney(cycle.netPnl)}</div>
+        </div>
+        <div class="mini-grid">
+          <div class="mini"><div class="mini-label">${escapeHtml(t("shortPutPnl"))}</div><div class="mini-value ${moneyClass(cycle.putPnl)}">${formatMoney(cycle.putPnl)}</div></div>
+          <div class="mini"><div class="mini-label">${escapeHtml(t("coveredCallPnl"))}</div><div class="mini-value ${moneyClass(cycle.callPnl)}">${formatMoney(cycle.callPnl)}</div></div>
+          <div class="mini"><div class="mini-label">${escapeHtml(t("stockPnl"))}</div><div class="mini-value ${moneyClass(cycle.stockPnl)}">${formatMoney(cycle.stockPnl)}</div></div>
+          <div class="mini"><div class="mini-label">${escapeHtml(t("netPnl"))}</div><div class="mini-value ${moneyClass(cycle.netPnl)}">${formatMoney(cycle.netPnl)}</div></div>
+        </div>
+        <div class="table-wrap" style="max-height: 360px;">
+          <table id="wheelDetailTable">
+            <thead>
+              <tr>
+                <th class="text" data-sort-key="date">${escapeHtml(t("date"))}</th>
+                <th class="text" data-sort-key="component">${escapeHtml(t("type"))}</th>
+                <th class="text" data-sort-key="action">${escapeHtml(t("action"))}</th>
+                <th class="text" data-sort-key="symbol">${escapeHtml(t("symbol"))}</th>
+                <th data-sort-key="qty">${escapeHtml(t("qty"))}</th>
+                <th data-sort-key="value">${escapeHtml(t("value"))}</th>
+                <th data-sort-key="commissions">${escapeHtml(t("commissions"))}</th>
+                <th data-sort-key="fees">${escapeHtml(t("fees"))}</th>
+                <th data-sort-key="total">${escapeHtml(t("total"))}</th>
+                <th class="text" data-sort-key="description">${escapeHtml(t("description"))}</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rows.map(row => `
+                <tr>
+                  <td class="text">${escapeHtml(fmtDate(row.date))}</td>
+                  <td class="text">${escapeHtml(row.wheelComponent)}</td>
+                  <td class="text">${escapeHtml(row.action || "-")}</td>
+                  <td class="text">${escapeHtml(row.symbol || row.optionKey || "-")}</td>
+                  <td>${numberFormat.format(row.quantity || 0)}</td>
+                  <td class="${moneyClass(row.value)}">${formatMoney(row.value)}</td>
+                  <td class="${moneyClass(row.commissions)}">${formatMoney(row.commissions)}</td>
+                  <td class="${moneyClass(row.fees)}">${formatMoney(row.fees)}</td>
+                  <td class="${moneyClass(row.total)}">${formatMoney(row.total)}</td>
+                  <td class="text">${escapeHtml(row.description || "")}</td>
+                </tr>
+              `).join("")}
+            </tbody>
+            <tfoot>
+              <tr>
+                <th class="text" colspan="5">${escapeHtml(t("subtotal"))}</th>
+                <th class="${moneyClass(totals.value)}">${formatMoney(totals.value)}</th>
+                <th class="${moneyClass(totals.commissions)}">${formatMoney(totals.commissions)}</th>
+                <th class="${moneyClass(totals.fees)}">${formatMoney(totals.fees)}</th>
+                <th class="${moneyClass(totals.total)}">${formatMoney(totals.total)}</th>
+                <th></th>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      `;
+      wireSortableHeaders("#wheelDetailTable", "wheelDetail", renderWheelDetail);
+    }
+
+    function renderDrilldown() {
+      const ticker = app.selectedTicker ? app.summary.byTicker.get(app.selectedTicker) : null;
+      if (!ticker) {
+        els.drilldown.innerHTML = `
+          <div class="panel">
+            <div class="empty">${escapeHtml(t("selectTicker"))}</div>
+          </div>`;
+        return;
+      }
+      const typeOptions = [...new Set(ticker.rows.map(row => row.subType || row.type || t("unknown")))].sort((a, b) => a.localeCompare(b));
+      if (app.drilldownTypeFilter !== "all" && !typeOptions.includes(app.drilldownTypeFilter)) {
+        app.drilldownTypeFilter = "all";
+      }
+      const filteredTransactionRows = ticker.rows
+        .filter(row => app.drilldownTypeFilter === "all" || (row.subType || row.type || t("unknown")) === app.drilldownTypeFilter);
+      const rowsDesc = sortedRows(filteredTransactionRows, "tickerTransactions", row => ({
+        date: row.date,
+        type: row.subType || row.type,
+        action: row.action || "-",
+        symbol: row.symbol || "-",
+        value: row.value,
+        commissions: row.commissions,
+        fees: row.fees,
+        total: row.total,
+        description: row.description
+      }));
+      const transactionTotals = rowsDesc.reduce((totals, row) => {
+        totals.value += row.value;
+        totals.commissions += row.commissions;
+        totals.fees += row.fees;
+        totals.total += row.total;
+        return totals;
+      }, { value: 0, commissions: 0, fees: 0, total: 0 });
+      els.drilldown.innerHTML = `
+        <div class="panel">
+          <div class="panel-header">
+            <h2 class="panel-title">${escapeHtml(ticker.ticker)} ${escapeHtml(t("drilldown"))}</h2>
+            <div class="panel-note">${wholeFormat.format(ticker.rows.length)} ${escapeHtml(t("rows"))}</div>
+          </div>
+          <div class="mini-grid">
+            <div class="mini"><div class="mini-label">${escapeHtml(t("equityCashflow"))}</div><div class="mini-value ${moneyClass(ticker.equityCashflow)}">${formatMoney(ticker.equityCashflow)}</div></div>
+            <div class="mini"><div class="mini-label">${escapeHtml(t("optionCashflow"))}</div><div class="mini-value ${moneyClass(ticker.optionCashflow)}">${formatMoney(ticker.optionCashflow)}</div></div>
+            <div class="mini"><div class="mini-label">${escapeHtml(t("openLotsTitle"))}</div><div class="mini-value">${wholeFormat.format(ticker.openLots.length)}</div></div>
+          </div>
+          <div class="chart-body"><canvas id="tickerMonthlyChart"></canvas></div>
+        </div>
+        <div class="panel">
+          <div class="panel-header">
+            <h2 class="panel-title">${escapeHtml(t("openLotsTitle"))}</h2>
+            <div class="panel-note">${escapeHtml(t("unmatchedLots"))}</div>
+          </div>
+          <div class="table-wrap" style="max-height: 230px;">
+            ${renderOpenLotsTable(ticker.openLots)}
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-header">
+            <h2 class="panel-title">${escapeHtml(t("transactions"))}</h2>
+            <div class="panel-tools">
+              <select id="drilldownTypeFilter" class="compact-select" title="${escapeHtml(t("filterType"))}">
+                <option value="all">${escapeHtml(t("allTypes"))}</option>
+                ${typeOptions.map(type => `<option value="${escapeHtml(type)}" ${app.drilldownTypeFilter === type ? "selected" : ""}>${escapeHtml(type)}</option>`).join("")}
+              </select>
+              <div class="panel-note">${escapeHtml(t("newestFirst"))}</div>
+            </div>
+          </div>
+          <div class="table-wrap" style="max-height: 380px;">
+            <table id="tickerTransactionsTable">
+              <thead><tr><th data-sort-key="date">${escapeHtml(t("date"))}</th><th data-sort-key="type">${escapeHtml(t("type"))}</th><th data-sort-key="action">${escapeHtml(t("action"))}</th><th data-sort-key="symbol">${escapeHtml(t("symbol"))}</th><th data-sort-key="value">${escapeHtml(t("value"))}</th><th data-sort-key="commissions">${escapeHtml(t("commissions"))}</th><th data-sort-key="fees">${escapeHtml(t("fees"))}</th><th data-sort-key="total">${escapeHtml(t("total"))}</th><th class="text" data-sort-key="description">${escapeHtml(t("description"))}</th></tr></thead>
+              <tbody>
+                ${rowsDesc.map(r => `
+                  <tr>
+                    <td class="text">${escapeHtml(fmtDate(r.date))}</td>
+                    <td class="text">${escapeHtml(r.subType || r.type)}</td>
+                    <td class="text">${escapeHtml(r.action || "-")}</td>
+                    <td class="text">${escapeHtml(r.symbol || "-")}</td>
+                    <td class="${moneyClass(r.value)}">${formatMoney(r.value)}</td>
+                    <td class="${moneyClass(r.commissions)}">${formatMoney(r.commissions)}</td>
+                    <td class="${moneyClass(r.fees)}">${formatMoney(r.fees)}</td>
+                    <td class="${moneyClass(r.total)}">${formatMoney(r.total)}</td>
+                    <td class="text">${escapeHtml(r.description)}</td>
+                  </tr>
+                `).join("")}
+              </tbody>
+              <tfoot>
+                <tr>
+                  <th class="text" colspan="4">${escapeHtml(t("subtotal"))}</th>
+                  <th class="${moneyClass(transactionTotals.value)}">${formatMoney(transactionTotals.value)}</th>
+                  <th class="${moneyClass(transactionTotals.commissions)}">${formatMoney(transactionTotals.commissions)}</th>
+                  <th class="${moneyClass(transactionTotals.fees)}">${formatMoney(transactionTotals.fees)}</th>
+                  <th class="${moneyClass(transactionTotals.total)}">${formatMoney(transactionTotals.total)}</th>
+                  <th></th>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>`;
+      const typeFilter = document.getElementById("drilldownTypeFilter");
+      if (typeFilter) {
+        typeFilter.addEventListener("change", event => {
+          app.drilldownTypeFilter = event.target.value;
+          renderDrilldown();
+        });
+      }
+      wireSortableHeaders("#tickerTransactionsTable", "tickerTransactions", renderDrilldown);
+      renderTickerMonthlyChart(ticker);
+    }
+
+    function renderOpenLotsTable(lots) {
+      if (!lots.length) return `<div class="empty">${escapeHtml(t("noOpenLots"))}</div>`;
+      return `
+        <table>
+          <thead><tr><th>${escapeHtml(t("opened"))}</th><th>${escapeHtml(t("side"))}</th><th>${escapeHtml(t("symbol"))}</th><th>${escapeHtml(t("qty"))}</th><th>${escapeHtml(t("carry"))}</th><th class="text">${escapeHtml(t("description"))}</th></tr></thead>
+          <tbody>
+            ${lots.map(l => {
+              const carry = l.side === "short" ? l.remainingAmount : -l.remainingAmount;
+              return `
+                <tr>
+                  <td class="text">${escapeHtml(fmtDate(l.opened))}</td>
+                  <td class="text">${escapeHtml(l.side)}</td>
+                  <td class="text">${escapeHtml(l.symbol)}</td>
+                  <td>${numberFormat.format(l.remaining)}</td>
+                  <td class="${moneyClass(carry)}">${formatMoney(carry)}</td>
+                  <td class="text">${escapeHtml(l.description)}</td>
+                </tr>`;
+            }).join("")}
+          </tbody>
+        </table>`;
+    }
+
+    function chartSetup(canvas) {
+      const ctx = canvas.getContext("2d");
+      const rect = canvas.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = Math.max(1, Math.floor(rect.width * dpr));
+      canvas.height = Math.max(1, Math.floor(rect.height * dpr));
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, rect.width, rect.height);
+      return { ctx, w: rect.width, h: rect.height };
+    }
+
+    function drawAxes(ctx, w, h, pad) {
+      ctx.strokeStyle = "#dfe4ea";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(pad.l, pad.t);
+      ctx.lineTo(pad.l, h - pad.b);
+      ctx.lineTo(w - pad.r, h - pad.b);
+      ctx.stroke();
+    }
+
+    function drawBarChart(canvas, entries, options = {}) {
+      const { ctx, w, h } = chartSetup(canvas);
+      const leftPad = options.leftPad || 76;
+      const pad = options.signed ? { l: leftPad, r: 58, t: 12, b: 34 } : { l: leftPad, r: 82, t: 12, b: 34 };
+      drawAxes(ctx, w, h, pad);
+      const maxBars = Math.max(6, Math.floor((h - pad.t - pad.b) / 24));
+      entries = entries.slice(0, maxBars);
+      if (!entries.length) return drawNoData(ctx, w, h);
+      const maxAbs = Math.max(...entries.map(e => Math.abs(e.value)), 1);
+      const innerW = w - pad.l - pad.r;
+      const innerH = h - pad.t - pad.b;
+      const barGap = 5;
+      const barH = Math.max(8, (innerH - barGap * (entries.length - 1)) / entries.length);
+      const zeroX = options.signed ? pad.l + innerW / 2 : pad.l;
+      ctx.font = "12px Inter, sans-serif";
+      ctx.textBaseline = "middle";
+      entries.forEach((entry, i) => {
+        const y = pad.t + i * (barH + barGap);
+        const availableW = options.signed ? innerW / 2 - 6 : innerW;
+        const len = Math.abs(entry.value) / maxAbs * availableW;
+        const x = options.signed ? (entry.value >= 0 ? zeroX : zeroX - len) : zeroX;
+        ctx.fillStyle = entry.value >= 0 ? "#127447" : "#b33b3b";
+        ctx.fillRect(x, y, len, barH);
+        ctx.fillStyle = "#526071";
+        ctx.textAlign = "right";
+        ctx.fillText(entry.label, pad.l - 8, y + barH / 2);
+        const valueText = options.valueFormatter ? options.valueFormatter(entry.value) : formatMoney(entry.value);
+        if (options.signed) {
+          ctx.textAlign = entry.value >= 0 ? "left" : "right";
+          ctx.fillText(valueText, entry.value >= 0 ? x + len + 5 : x - 5, y + barH / 2);
+        } else {
+          ctx.textAlign = "left";
+          ctx.fillText(valueText, x + len + 5, y + barH / 2);
+        }
+      });
+      ctx.strokeStyle = "#9aa6b2";
+      ctx.beginPath();
+      ctx.moveTo(zeroX, pad.t);
+      ctx.lineTo(zeroX, h - pad.b);
+      ctx.stroke();
+      if (options.caption) {
+        ctx.fillStyle = "#66717f";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "alphabetic";
+        ctx.fillText(options.caption, w / 2, h - 10);
+      }
+    }
+
+    function drawLineChart(canvas, points, options = {}) {
+      const { ctx, w, h } = chartSetup(canvas);
+      const pad = { l: 54, r: 16, t: 14, b: 34 };
+      drawAxes(ctx, w, h, pad);
+      if (!points.length) return drawNoData(ctx, w, h);
+      const values = points.map(p => p.value);
+      const min = Math.min(0, ...values);
+      const max = Math.max(0, ...values);
+      const span = max - min || 1;
+      const xFor = i => pad.l + (points.length === 1 ? 0 : i / (points.length - 1)) * (w - pad.l - pad.r);
+      const yFor = v => pad.t + (max - v) / span * (h - pad.t - pad.b);
+      const zeroY = yFor(0);
+      ctx.strokeStyle = "#ccd4dd";
+      ctx.beginPath();
+      ctx.moveTo(pad.l, zeroY);
+      ctx.lineTo(w - pad.r, zeroY);
+      ctx.stroke();
+      ctx.strokeStyle = "#355c9a";
+      ctx.lineWidth = 2.4;
+      ctx.beginPath();
+      points.forEach((p, i) => {
+        const x = xFor(i);
+        const y = yFor(p.value);
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+      ctx.stroke();
+      ctx.fillStyle = "#355c9a";
+      points.forEach((p, i) => {
+        const x = xFor(i);
+        const y = yFor(p.value);
+        ctx.beginPath();
+        ctx.arc(x, y, 3, 0, Math.PI * 2);
+        ctx.fill();
+      });
+      ctx.fillStyle = "#526071";
+      ctx.font = "12px Inter, sans-serif";
+      ctx.textAlign = "left";
+      ctx.fillText(formatMoney(max), 8, pad.t + 4);
+      ctx.fillText(formatMoney(min), 8, h - pad.b);
+      ctx.textAlign = "center";
+      ctx.fillText(points[0].label, pad.l + 8, h - 10);
+      ctx.textAlign = "right";
+      ctx.fillText(points[points.length - 1].label, w - pad.r, h - 10);
+      if (options.hover) {
+        app.chartHitAreas.set(canvas.id, points.map((p, i) => ({
+          x: xFor(i),
+          y: yFor(p.value),
+          label: p.label,
+          value: p.value,
+          formatter: options.valueFormatter || formatMoney
+        })));
+        canvas.onmousemove = event => showChartTooltip(canvas, event);
+        canvas.onmouseleave = hideChartTooltip;
+      }
+    }
+
+    function drawColumnChart(canvas, points, options = {}) {
+      const { ctx, w, h } = chartSetup(canvas);
+      app.chartHitAreas.set(canvas.id, []);
+      const pad = { l: 42, r: 16, t: 30, b: 48 };
+      drawAxes(ctx, w, h, pad);
+      if (!points.length) return drawNoData(ctx, w, h);
+      const max = Math.max(...points.map(p => p.value), 1);
+      const innerW = w - pad.l - pad.r;
+      const innerH = h - pad.t - pad.b;
+      const step = innerW / points.length;
+      const barW = Math.max(5, Math.min(24, step * 0.58));
+      ctx.fillStyle = options.color || "#126f7a";
+      const hitAreas = [];
+      points.forEach((point, i) => {
+        const barH = point.value / max * innerH;
+        const x = pad.l + i * step + (step - barW) / 2;
+        const y = h - pad.b - barH;
+        ctx.fillRect(x, y, barW, barH);
+        hitAreas.push({
+          x: x + barW / 2,
+          y: y + Math.max(4, barH / 2),
+          label: point.label,
+          value: point.value,
+          formatter: options.valueFormatter || (value => wholeFormat.format(value))
+        });
+      });
+      ctx.fillStyle = "#526071";
+      ctx.font = "12px Inter, sans-serif";
+      ctx.textAlign = "left";
+      ctx.fillText(wholeFormat.format(max), 8, pad.t + 4);
+      if (options.showLabels) {
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        points.forEach((point, i) => {
+          const x = pad.l + i * step + step / 2;
+          const barH = point.value / max * innerH;
+          const barTop = h - pad.b - barH;
+          ctx.fillStyle = "#18202a";
+          ctx.fillText(wholeFormat.format(point.value), x, Math.max(12, barTop - 9));
+          ctx.fillStyle = "#526071";
+          const y = h - pad.b + 18;
+          const label = formatMonthLabel(point.label);
+          if (step < 44) {
+            ctx.save();
+            ctx.translate(x, y + 12);
+            ctx.rotate(-Math.PI / 4);
+            ctx.fillText(label, 0, 0);
+            ctx.restore();
+          } else {
+            ctx.fillText(label, x, y);
+          }
+        });
+      } else {
+        ctx.textAlign = "center";
+        ctx.fillText(points[0].label, pad.l + 8, h - 10);
+        ctx.textAlign = "right";
+        ctx.fillText(points[points.length - 1].label, w - pad.r, h - 10);
+      }
+      if (options.hover) {
+        app.chartHitAreas.set(canvas.id, hitAreas);
+        canvas.onmousemove = event => showChartTooltip(canvas, event);
+        canvas.onmouseleave = hideChartTooltip;
+      }
+    }
+
+    function formatMonthLabel(label) {
+      const parts = String(label).split("-");
+      if (parts.length !== 2) return label;
+      return `${parts[0]}/${parts[1]}`;
+    }
+
+    function showChartTooltip(canvas, event) {
+      const points = app.chartHitAreas.get(canvas.id) || [];
+      if (!points.length) return hideChartTooltip();
+      const canvasRect = canvas.getBoundingClientRect();
+      const body = canvas.closest(".chart-body");
+      const bodyRect = body.getBoundingClientRect();
+      const x = event.clientX - canvasRect.left;
+      const y = event.clientY - canvasRect.top;
+      let best = null;
+      for (const point of points) {
+        const dist = Math.hypot(point.x - x, point.y - y);
+        if (!best || dist < best.dist) best = { point, dist };
+      }
+      if (!best || best.dist > 18) return hideChartTooltip();
+      if (els.chartTooltip.parentElement !== body) body.appendChild(els.chartTooltip);
+      const left = Math.min(bodyRect.width - 12, Math.max(8, event.clientX - bodyRect.left + 12));
+      const top = Math.min(bodyRect.height - 8, Math.max(8, event.clientY - bodyRect.top + 12));
+      els.chartTooltip.style.display = "block";
+      els.chartTooltip.style.left = `${left}px`;
+      els.chartTooltip.style.top = `${top}px`;
+      els.chartTooltip.textContent = `${best.point.label}: ${best.point.formatter(best.point.value)}`;
+    }
+
+    function hideChartTooltip() {
+      els.chartTooltip.style.display = "none";
+    }
+
+    function drawDonutChart(canvas, entries) {
+      const { ctx, w, h } = chartSetup(canvas);
+      if (!entries.length) return drawNoData(ctx, w, h);
+      const total = entries.reduce((sum, e) => sum + e.value, 0) || 1;
+      const cx = w * 0.36;
+      const cy = h * 0.5;
+      const radius = Math.min(w, h) * 0.31;
+      const colors = ["#126f7a", "#8a5a12", "#355c9a", "#b33b3b", "#66717f"];
+      let start = -Math.PI / 2;
+      entries.forEach((entry, i) => {
+        const angle = entry.value / total * Math.PI * 2;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.arc(cx, cy, radius, start, start + angle);
+        ctx.closePath();
+        ctx.fillStyle = colors[i % colors.length];
+        ctx.fill();
+        start += angle;
+      });
+      ctx.globalCompositeOperation = "destination-out";
+      ctx.beginPath();
+      ctx.arc(cx, cy, radius * 0.56, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalCompositeOperation = "source-over";
+      ctx.font = "12px Inter, sans-serif";
+      ctx.textAlign = "left";
+      ctx.textBaseline = "middle";
+      entries.forEach((entry, i) => {
+        const y = 38 + i * 28;
+        ctx.fillStyle = colors[i % colors.length];
+        ctx.fillRect(w * 0.62, y - 6, 12, 12);
+        ctx.fillStyle = "#526071";
+        ctx.fillText(`${entry.label}: ${wholeFormat.format(entry.value)}`, w * 0.62 + 18, y);
+      });
+    }
+
+    function drawNoData(ctx, w, h) {
+      ctx.fillStyle = "#66717f";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.font = "13px Inter, sans-serif";
+      ctx.fillText(t("noData"), w / 2, h / 2);
+    }
+
+    function renderCharts() {
+      const tickers = app.summary.tickers.filter(t => t.ticker !== CASH_TICKER);
+      const cashflowWinners = topBySign(tickers, "cashflow", "positive");
+      const cashflowLosers = topBySign(tickers, "cashflow", "negative");
+      drawBarChart(document.getElementById("cashflowWinnersChart"), cashflowWinners);
+      drawBarChart(document.getElementById("cashflowLosersChart"), cashflowLosers);
+
+      let cumulative = 0;
+      const cumulativePoints = [...app.summary.monthlyCashflow.entries()]
+        .sort((a, b) => a[0].localeCompare(b[0]))
+        .map(([label, value]) => {
+          cumulative += value;
+          return { label, value: cumulative };
+        });
+      drawLineChart(document.getElementById("cumulativeChart"), cumulativePoints, { hover: true });
+
+      const realizedWinners = topBySign(tickers, "realized", "positive");
+      const realizedLosers = topBySign(tickers, "realized", "negative");
+      drawBarChart(document.getElementById("realizedWinnersChart"), realizedWinners);
+      drawBarChart(document.getElementById("realizedLosersChart"), realizedLosers);
+
+      const activity = [...app.summary.activity.entries()]
+        .sort((a, b) => b[1] - a[1])
+        .map(([label, value]) => ({ label, value }));
+      drawDonutChart(document.getElementById("activityChart"), activity);
+
+      drawColumnChart(document.getElementById("optionTradesChart"), monthlyCountPoints(app.summary.monthlyOptionTrades), { color: "#8a5a12", showLabels: true });
+      drawColumnChart(document.getElementById("equityTradesChart"), monthlyCountPoints(app.summary.monthlyEquityTrades), { color: "#355c9a", showLabels: true });
+
+      const strategyPnl = app.summary.optionStrategies
+        .filter(strategy => Math.abs(strategy.pnl) > 0.004)
+        .slice(0, 10)
+        .map(strategy => ({ label: t(strategy.key), value: strategy.pnl }));
+      drawBarChart(document.getElementById("optionStrategyPnlChart"), strategyPnl, { signed: true, leftPad: 136 });
+
+      const strategyCounts = app.summary.optionStrategies
+        .filter(strategy => strategy.lifecycles > 0)
+        .sort((a, b) => b.lifecycles - a.lifecycles)
+        .slice(0, 10)
+        .map(strategy => ({ label: t(strategy.key), value: strategy.lifecycles }));
+      drawBarChart(document.getElementById("optionStrategyCountChart"), strategyCounts, { leftPad: 136, valueFormatter: value => wholeFormat.format(value) });
+    }
+
+    function topBySign(tickers, key, sign) {
+      const rows = tickers.filter(t => sign === "positive" ? t[key] > 0.004 : t[key] < -0.004);
+      rows.sort((a, b) => sign === "positive" ? b[key] - a[key] : a[key] - b[key]);
+      return rows.slice(0, 10).map(t => ({ label: t.ticker, value: t[key] || 0 }));
+    }
+
+    function monthlyCountPoints(map) {
+      return [...map.entries()]
+        .filter(([label]) => label !== t("unknown"))
+        .sort((a, b) => a[0].localeCompare(b[0]))
+        .map(([label, value]) => ({ label, value }));
+    }
+
+    function renderTickerMonthlyChart(ticker) {
+      const monthly = new Map();
+      for (const row of ticker.rows) monthly.set(row.month, (monthly.get(row.month) || 0) + row.total);
+      let cumulative = 0;
+      const points = [...monthly.entries()].sort((a, b) => a[0].localeCompare(b[0])).map(([label, value]) => {
+        cumulative += value;
+        return { label, value: cumulative };
+      });
+      const canvas = document.getElementById("tickerMonthlyChart");
+      if (canvas) drawLineChart(canvas, points, { hover: true });
+    }
+
+    function applyActiveTab() {
+      document.querySelectorAll("[data-tab-target]").forEach(button => {
+        button.classList.toggle("active", button.dataset.tabTarget === app.activeTab);
+      });
+      document.querySelectorAll("[data-tab-panel]").forEach(panel => {
+        panel.classList.toggle("hidden-tab", panel.dataset.tabPanel !== app.activeTab);
+      });
+    }
+
+    function renderAll() {
+      if (!app.summary) return;
+      applyActiveTab();
+      renderKpis();
+      renderTransferBreakdown();
+      renderIncomeBreakdown();
+      renderTickerTable();
+      renderOptionStrategyTable();
+      renderOptionLifecycleTable();
+      renderWheelTable();
+      renderDrilldown();
+      renderCharts();
+    }
+
+    async function loadText(text, source) {
+      const parsed = parseCSV(text);
+      if (!parsed.length) throw new Error(t("noCsvRows"));
+      app.allRows = parsed;
+      app.periodPreset = "all";
+      app.periodStart = "";
+      app.periodEnd = "";
+      els.periodPreset.value = "all";
+      els.periodStart.value = "";
+      els.periodEnd.value = "";
+      updatePeriodControlVisibility();
+      const bounds = loadedDateBounds(parsed);
+      for (const input of [els.periodStart, els.periodEnd]) {
+        input.min = localDateValue(bounds.min);
+        input.max = localDateValue(bounds.max);
+      }
+      app.lastSource = source;
+      refreshForPeriod();
+    }
+
+    function setLoadedStatus() {
+      if (!app.summary) return;
+      setStatus(t("loadedStatus", {
+        source: `<strong title="${escapeHtml(app.lastSource)}">${displayFileName(app.lastSource)}</strong>`,
+        rows: wholeFormat.format(app.summary.rows.length),
+        tickers: wholeFormat.format(app.summary.tickers.length),
+        cashflow: formatMoney(app.summary.totalCashflow)
+      }));
+    }
+
+    async function tryAutoLoad() {
+      setStatus(t("fileStatus"));
+    }
+
+    els.fileInput.addEventListener("change", async event => {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+      try {
+        await loadText(await file.text(), file.name);
+      } catch (error) {
+        setStatus(t("csvLoadFail", { message: `<strong>${escapeHtml(error.message)}</strong>` }));
+      }
+    });
+
+    els.languageSelect.addEventListener("change", event => {
+      app.lang = event.target.value;
+      localStorage.setItem("portfolioReviewLang", app.lang);
+      applyLanguage();
+      if (app.summary) {
+        setLoadedStatus();
+        renderAll();
+      } else {
+        setStatus(t("fileStatus"));
+      }
+    });
+
+    els.resetSelection.addEventListener("click", () => {
+      app.selectedTicker = null;
+      app.selectedLifecycleId = null;
+      app.selectedWheelId = null;
+      app.drilldownTypeFilter = "all";
+      app.search = "";
+      els.searchInput.value = "";
+      renderAll();
+    });
+
+    document.querySelectorAll("[data-tab-target]").forEach(button => {
+      button.addEventListener("click", () => {
+        app.activeTab = button.dataset.tabTarget;
+        hideChartTooltip();
+        renderAll();
+      });
+    });
+
+    els.searchInput.addEventListener("input", event => {
+      app.search = event.target.value;
+      renderTickerTable();
+    });
+
+    els.periodPreset.addEventListener("change", event => {
+      app.periodPreset = event.target.value;
+      updatePeriodControlVisibility();
+      setPeriodFromPreset();
+      if (app.allRows.length) refreshForPeriod();
+    });
+
+    els.periodStart.addEventListener("change", event => {
+      app.periodPreset = "custom";
+      els.periodPreset.value = "custom";
+      updatePeriodControlVisibility();
+      app.periodStart = event.target.value;
+      if (app.allRows.length) refreshForPeriod();
+    });
+
+    els.periodEnd.addEventListener("change", event => {
+      app.periodPreset = "custom";
+      els.periodPreset.value = "custom";
+      updatePeriodControlVisibility();
+      app.periodEnd = event.target.value;
+      if (app.allRows.length) refreshForPeriod();
+    });
+
+    els.sortSelect.addEventListener("change", event => {
+      const [key, dir] = event.target.value.split(":");
+      app.sortKey = key;
+      app.sortDir = dir;
+      renderTickerTable();
+    });
+
+    document.querySelectorAll(".segmented button").forEach(button => {
+      button.addEventListener("click", () => {
+        document.querySelectorAll(".segmented button").forEach(b => b.classList.remove("active"));
+        button.classList.add("active");
+        app.view = button.dataset.view;
+        renderTickerTable();
+      });
+    });
+
+    els.tickerTable.querySelectorAll("th[data-sort]").forEach(th => {
+      th.addEventListener("click", () => {
+        const key = th.dataset.sort;
+        app.sortDir = app.sortKey === key && app.sortDir === "desc" ? "asc" : "desc";
+        app.sortKey = key;
+        els.sortSelect.value = `${app.sortKey}:${app.sortDir}`;
+        renderTickerTable();
+      });
+    });
+
+    document.querySelectorAll("#optionLifecycleTable th[data-lifecycle-sort]").forEach(th => {
+      th.addEventListener("click", () => {
+        const key = th.dataset.lifecycleSort;
+        app.lifecycleSortDir = app.lifecycleSortKey === key && app.lifecycleSortDir === "desc" ? "asc" : "desc";
+        app.lifecycleSortKey = key;
+        renderOptionLifecycleTable();
+      });
+    });
+
+    window.addEventListener("resize", () => {
+      hideChartTooltip();
+      window.clearTimeout(app.resizeTimer);
+      app.resizeTimer = window.setTimeout(renderAll, 120);
+    });
+    window.addEventListener("scroll", hideChartTooltip, { passive: true });
+    window.addEventListener("touchstart", hideChartTooltip, { passive: true });
+
+    applyLanguage();
+    updatePeriodControlVisibility();
+    setStatus(t("fileStatus"));
+    tryAutoLoad();
+  </script>
+</body>
+</html>
