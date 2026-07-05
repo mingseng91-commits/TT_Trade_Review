@@ -229,6 +229,13 @@
       display: none;
     }
 
+    .filter-strip {
+      display: grid;
+      grid-template-columns: minmax(220px, 360px);
+      gap: 10px;
+      margin: 0 0 14px;
+    }
+
     .control, .select {
       width: 100%;
       min-height: 38px;
@@ -744,7 +751,7 @@
         </div>
       </section>
 
-      <section class="chart-grid" data-tab-panel="options">
+      <section class="chart-grid" data-tab-panel="overview">
         <div class="chart-card">
           <div class="panel-header">
             <h2 class="panel-title" data-i18n="optionStrategyPnl">Option Strategy PnL</h2>
@@ -760,6 +767,10 @@
           <div class="chart-body"><canvas id="optionStrategyCountChart"></canvas></div>
         </div>
       </section>
+
+      <div class="filter-strip" data-tab-panel="options">
+        <input id="optionTickerFilter" class="control" placeholder="Filter option ticker" data-i18n-placeholder="optionTickerFilter">
+      </div>
 
       <section class="panel" data-tab-panel="options">
         <div class="panel-header">
@@ -815,6 +826,10 @@
         </div>
         <div id="optionLifecycleDetail" class="lifecycle-detail"></div>
       </section>
+
+      <div class="filter-strip" data-tab-panel="wheel">
+        <input id="wheelTickerFilter" class="control" placeholder="Filter wheel ticker" data-i18n-placeholder="wheelTickerFilter">
+      </div>
 
       <section class="panel" data-tab-panel="wheel">
         <div class="panel-header">
@@ -872,6 +887,18 @@
             <h3 data-i18n="fifoClosedLots">FIFO Closed Lots</h3>
             <p data-i18n="fifoExplain">First-in, first-out means the earliest open lot is matched first when a closing trade appears. Open/unmatched lots remain separate and are not marked to market.</p>
           </div>
+          <div class="explain-item">
+            <h3 data-i18n="normalizedTicker">Normalized Ticker</h3>
+            <p data-i18n="normalizedTickerExplain">The dashboard groups rows by Underlying Symbol, then Root Symbol, then Symbol. This turns option contracts like RGTI 260918C00017000 into RGTI so option, equity, assignment, dividend, and fee rows can be reviewed together.</p>
+          </div>
+          <div class="explain-item">
+            <h3 data-i18n="wheelDefinition">Wheel Definition</h3>
+            <p data-i18n="wheelDefinitionExplain">In v3, a wheel is assignment-anchored: short puts and rolls that lead to assignment, then assigned stock, covered calls, dividends/interest, and stock sale or call-away exit. Short puts that never become assigned stock stay in option analysis, not Wheel.</p>
+          </div>
+          <div class="explain-item">
+            <h3 data-i18n="stockSplitHandling">Stock Split Handling</h3>
+            <p data-i18n="stockSplitExplain">Forward and reverse split Receive Deliver rows are treated as position transformations. They do not create realized PnL; the share count is converted from the close row to the open row while total cost basis is preserved.</p>
+          </div>
         </div>
       </section>
 
@@ -922,13 +949,13 @@
         <aside class="drill" id="drilldown"></aside>
       </section>
 
-      <p class="footnote" data-i18n="footnote">Realized PnL uses FIFO matching from the CSV transaction only. Open positions are shown as carrying cashflow and are not marked to current market value.</p>
+      <p class="footnote" data-i18n="footnote">Realized PnL uses FIFO matching from the CSV transactions only. Open positions are shown as carrying cashflow and are not marked to current market value.</p>
       <div id="chartTooltip" class="chart-tooltip"></div>
     </main>
   </div>
 
   <script>
-    const DEFAULT_CSV = "";
+    const DEFAULT_CSV = "tastytrade_transactions_history_x5WZ06914_250101_to_260704.csv";
     const CASH_TICKER = "(cash)";
     const app = {
       rows: [],
@@ -959,7 +986,9 @@
       chartHitAreas: new Map(),
       drilldownTypeFilter: "all",
       activeTab: "overview",
-      selectedWheelId: null
+      selectedWheelId: null,
+      optionTickerFilter: "",
+      wheelTickerFilter: ""
     };
 
     const els = {
@@ -972,6 +1001,8 @@
       languageSelect: document.getElementById("languageSelect"),
       resetSelection: document.getElementById("resetSelection"),
       searchInput: document.getElementById("searchInput"),
+      optionTickerFilter: document.getElementById("optionTickerFilter"),
+      wheelTickerFilter: document.getElementById("wheelTickerFilter"),
       sortSelect: document.getElementById("sortSelect"),
       tickerTable: document.getElementById("tickerTable"),
       tableNote: document.getElementById("tableNote"),
@@ -1006,6 +1037,8 @@
         startDate: "Start date",
         endDate: "End date",
         filterPlaceholder: "Filter ticker, symbol, or description",
+        optionTickerFilter: "Filter option ticker",
+        wheelTickerFilter: "Filter wheel ticker",
         tableView: "Table view",
         sortTableTitle: "Sort table",
         all: "All",
@@ -1079,7 +1112,7 @@
         unmatchedOptionClose: "Unmatched Option Close",
         otherOptionStrategy: "Other Option Strategy",
         optionLifecycleMatching: "Option Lifecycle Matching",
-        optionLifecycleExplain: "Option closes match the exact contract first. If an order closes one contract and opens another, v2 links it as a roll and keeps the PnL in the same strategy lifecycle.",
+        optionLifecycleExplain: "Option lifecycles are grouped from CSV option rows sorted by date. Opens create contract lots using exact symbol, expiration, strike, and call/put. Closes, expirations, and assignments first match those exact lots FIFO, consuming across multiple same-contract lots when one close quantity covers more than one open. Rows sharing the same Order #, or otherwise the same date and ticker, are treated as one order group; if that group closes one contract and opens another, it is counted as a roll and kept in the same lifecycle. Assignment closes the option at zero and the related stock row is handled separately in Wheel analysis.",
         status: "Status",
         openStatus: "Open",
         closedStatus: "Closed",
@@ -1096,13 +1129,19 @@
         topAbsoluteValues: "Top absolute values",
         activityBreakdown: "Activity Breakdown",
         transactionTypes: "Transaction types",
-        pnlGuide: "PnL Guide",
-        calculationNotes: "Calculation notes",
+        pnlGuide: "Method Guide",
+        calculationNotes: "Definitions and calculations",
         cashflowExplain: "Sum of CSV Total by ticker, including trade cashflows, fees, commissions, dividends, expirations, assignments, Wire Funds Received, and funds withdrawals. Example: sell option premium $100 minus $1 commission and $0.13 fee contributes $98.87 cashflow.",
         realizedExplain: "Closed-lot PnL from FIFO matching using net CSV Total values, so commissions and fees are included. Example: buy 10 shares for $500 total and later sell those 10 for $620 total gives $120 realized PnL.",
         cumulativeExplain: "Running monthly sum of all CSV Total values. Example: January cashflow $200 followed by February -$50 shows cumulative values of $200 then $150.",
         fifoClosedLots: "FIFO Closed Lots",
         fifoExplain: "First-in, first-out means the earliest open lot is matched first when a closing trade appears. Open/unmatched lots remain separate and are not marked to market.",
+        normalizedTicker: "Normalized Ticker",
+        normalizedTickerExplain: "The dashboard groups rows by Underlying Symbol, then Root Symbol, then Symbol. This turns option contracts like RGTI 260918C00017000 into RGTI so option, equity, assignment, dividend, and fee rows can be reviewed together.",
+        wheelDefinition: "Wheel Definition",
+        wheelDefinitionExplain: "In v3, a wheel is assignment-anchored: short puts and rolls that lead to assignment, then assigned stock, covered calls, dividends/interest, and stock sale or call-away exit. Short puts that never become assigned stock stay in option analysis, not Wheel.",
+        stockSplitHandling: "Stock Split Handling",
+        stockSplitExplain: "Forward and reverse split Receive Deliver rows are treated as position transformations. They do not create realized PnL; the share count is converted from the close row to the open row while total cost basis is preserved.",
         footnote: "Cashflow PnL includes Wire Funds Received and funds withdrawals. Realized PnL uses FIFO matching from net CSV Total values, so commissions and fees are included. Unrealized PnL is not calculated because this CSV has no live prices.",
         dateRange: "Date Range",
         rows: "Rows",
@@ -1160,8 +1199,8 @@
         noData: "No data",
         unknown: "Unknown",
         loadedStatus: "Loaded {source}: {rows} rows, {tickers} normalized tickers. Cashflow reconciles to {cashflow}.",
-        fileStatus: "Use Load CSV to choose a tastytrade transaction export. No CSV filename is stored in this sanitized HTML.",
-        autoLoadFail: "Automatic CSV load is disabled in this sanitized HTML. Use Load CSV to choose an export.",
+        fileStatus: "Open this page through a local server for automatic CSV loading, or use Load CSV. Expected file: {file}.",
+        autoLoadFail: "Automatic CSV load did not complete. Use Load CSV to choose {file}.",
         csvLoadFail: "Could not load CSV: {message}",
         noCsvRows: "No CSV rows found."
       },
@@ -1187,6 +1226,8 @@
         startDate: "开始日期",
         endDate: "结束日期",
         filterPlaceholder: "筛选标的、代码或描述",
+        optionTickerFilter: "筛选期权标的",
+        wheelTickerFilter: "筛选 Wheel 标的",
         tableView: "表格视图",
         sortTableTitle: "表格排序",
         all: "全部",
@@ -1260,7 +1301,7 @@
         unmatchedOptionClose: "未匹配期权平仓",
         otherOptionStrategy: "其他期权策略",
         optionLifecycleMatching: "期权生命周期匹配",
-        optionLifecycleExplain: "期权平仓会先匹配完全相同的合约。如果同一订单平掉旧合约并开新合约，v2 会把它识别为滚动/移仓，并把 PnL 保留在同一个策略生命周期中。",
+        optionLifecycleExplain: "期权生命周期会按日期排序后的 CSV 期权记录来分组。开仓会按完全相同的 symbol、到期日、行权价、Call/Put 建立合约批次。平仓、到期和指派会优先用 FIFO 匹配这些完全相同的批次；如果一笔平仓数量覆盖多个相同合约开仓批次，也会继续消耗多个批次。相同 Order # 的记录，或没有 Order # 时同日期同标的的记录，会视为同一订单组；如果同一组里平掉旧合约并开新合约，就识别为滚动/移仓，并保留在同一个生命周期中。指派会把期权按 0 关闭，相关股票记录会在 Wheel 分析里单独处理。",
         status: "状态",
         openStatus: "未结束",
         closedStatus: "已结束",
@@ -1277,13 +1318,19 @@
         topAbsoluteValues: "按绝对值排行",
         activityBreakdown: "活动分类",
         transactionTypes: "交易类型",
-        pnlGuide: "PnL 说明",
-        calculationNotes: "计算说明",
+        pnlGuide: "方法说明",
+        calculationNotes: "定义与计算",
         cashflowExplain: "按标的汇总 CSV 的 Total，包含交易现金流、费用、佣金、股息、到期、指派、Wire Funds Received 和资金取出。例如：卖出期权权利金 $100，扣除 $1 佣金和 $0.13 费用后，现金流贡献为 $98.87。",
         realizedExplain: "使用 CSV Total 的净额按 FIFO 匹配平仓批次计算，因此已包含佣金和费用。例如：买入 10 股总成本 $500，之后卖出这 10 股总收入 $620，则已实现 PnL 为 $120。",
         cumulativeExplain: "按月累计所有 CSV Total。例如：1 月现金流 $200，2 月 -$50，则累计值为 $200、$150。",
         fifoClosedLots: "FIFO 已平仓批次",
         fifoExplain: "FIFO 即先进先出：出现平仓交易时，优先匹配最早的开仓批次。未匹配批次单独保留，不按当前市价盯市。",
+        normalizedTicker: "标准化标的",
+        normalizedTickerExplain: "仪表板会按 Underlying Symbol、Root Symbol、Symbol 的顺序归并交易行。例如 RGTI 260918C00017000 这样的期权合约会归并为 RGTI，方便把期权、股票、指派、股息和费用放在同一个标的下查看。",
+        wheelDefinition: "Wheel 定义",
+        wheelDefinitionExplain: "v3 中的 Wheel 以指派为锚点：包含导致指派的卖 Put 与滚动、被指派股票、备兑 Call、股息/利息，以及股票卖出或被 Call 走。没有变成股票指派的卖 Put 留在期权分析中，不计入 Wheel。",
+        stockSplitHandling: "股票拆分处理",
+        stockSplitExplain: "Forward Split 和 Reverse Split 的 Receive Deliver 记录会被视为持仓转换，而不是已实现 PnL。系统会把股数从 close 行转换为 open 行，同时保留原来的总成本基础。",
         footnote: "现金流 PnL 包含 Wire Funds Received 和资金取出。已实现 PnL 使用 CSV Total 净额按 FIFO 匹配计算，因此已包含佣金和费用。由于 CSV 没有实时价格，因此不计算未实现 PnL。",
         dateRange: "日期范围",
         rows: "记录数",
@@ -1341,8 +1388,8 @@
         noData: "暂无数据",
         unknown: "未知",
         loadedStatus: "已载入 {source}：{rows} 行，{tickers} 个标准化标的。现金流核对为 {cashflow}。",
-        fileStatus: "请使用“载入 CSV”选择 tastytrade 交易导出文件。此 sanitized HTML 不保存 CSV 文件名。",
-        autoLoadFail: "此 sanitized HTML 已停用自动载入 CSV。请使用“载入 CSV”选择导出文件。",
+        fileStatus: "通过本地服务器打开时会自动载入 CSV；也可以使用“载入 CSV”。预期文件：{file}。",
+        autoLoadFail: "自动载入 CSV 未完成。请使用“载入 CSV”选择 {file}。",
         csvLoadFail: "无法载入 CSV：{message}",
         noCsvRows: "没有找到 CSV 记录。"
       }
@@ -1523,6 +1570,41 @@
         openedText: row.dateText,
         description: row.description
       };
+    }
+
+    function isSplitRow(row) {
+      return row.type === "Receive Deliver" && row.subType.includes("Split");
+    }
+
+    function splitKey(row) {
+      return `${row.dateText}|${row.ticker}|${row.subType}`;
+    }
+
+    function findSplitPair(rows, row) {
+      const group = rows.filter(candidate =>
+        isSplitRow(candidate) &&
+        candidate.ticker === row.ticker &&
+        candidate.dateText === row.dateText &&
+        candidate.subType === row.subType
+      );
+      return {
+        open: group.find(candidate => candidate.action === "BUY_TO_OPEN"),
+        close: group.find(candidate => candidate.action === "SELL_TO_CLOSE")
+      };
+    }
+
+    function transformSplitLots(lots, rows, row) {
+      const { open, close } = findSplitPair(rows, row);
+      if (!open || !close || close.quantity <= 0) return null;
+      const ratio = open.quantity / close.quantity;
+      for (const lot of lots) {
+        if (lot.ticker !== row.ticker || lot.instrument !== "Equity" || lot.side !== "long" || lot.remaining <= 1e-9) continue;
+        lot.qty *= ratio;
+        lot.remaining *= ratio;
+        lot.symbol = open.symbol || lot.symbol;
+        lot.description = `${lot.description}; ${row.subType} ${numberFormat.format(close.quantity)} to ${numberFormat.format(open.quantity)}`;
+      }
+      return { open, close, ratio };
     }
 
     function consumeLots(lots, row, side, closeAmount, realizedEvents, realizedByTicker) {
@@ -1884,6 +1966,7 @@
       for (const { lifecycle, assignment } of assignedPutLifecycles) {
         const cycle = emptyWheelCycle(`W${nextId++}`, assignment.ticker, assignment);
         cycle._rowKeys = new Set();
+        cycle._splitKeys = new Set();
         cycles.push(cycle);
 
         for (const row of lifecycle.transactions) {
@@ -1921,7 +2004,8 @@
             row.subType === "Expiration" ||
             row.subType === "Assignment"
           );
-          const isStockSale = row.instrument === "Equity" && row.action === "SELL_TO_CLOSE";
+          const isStockSplit = row.instrument === "Equity" && isSplitRow(row);
+          const isStockSale = row.instrument === "Equity" && row.action === "SELL_TO_CLOSE" && !isStockSplit;
 
           if (isCoveredCallRow && (cycle.shares > 1e-9 || cycle.openCallQty > 1e-9)) {
             addUniqueWheelRow(cycle, row, "Covered Call");
@@ -1936,6 +2020,19 @@
             cycle.stockPnl += row.total;
             cycle.stockProceeds += row.total;
             cycle.shares = Math.max(0, cycle.shares - (row.quantity || 0));
+          } else if (isStockSplit && cycle.shares > 1e-9) {
+            const key = splitKey(row);
+            if (!cycle._splitKeys.has(key)) {
+              const { open, close } = findSplitPair(rows, row);
+              if (open && close && close.quantity > 0) {
+                addUniqueWheelRow(cycle, close, "Split");
+                addUniqueWheelRow(cycle, open, "Split");
+                const ratio = open.quantity / close.quantity;
+                cycle.shares *= ratio;
+                cycle.assignedShares *= ratio;
+              }
+              cycle._splitKeys.add(key);
+            }
           } else if (isIncome && cycle.shares > 1e-9) {
             addUniqueWheelRow(cycle, row, "Div/Interest");
             cycle.dividends += row.total;
@@ -1949,6 +2046,7 @@
         cycle.avgCost = cycle.assignedShares > 0 && cycle.stockCost ? Math.abs(cycle.stockCost) / cycle.assignedShares : 0;
         cycle.statusKey = cycle.shares > 1e-9 || cycle.openCallQty > 1e-9 ? "openWheel" : "closedWheel";
         delete cycle._rowKeys;
+        delete cycle._splitKeys;
       }
 
       return cycles.sort((a, b) => Math.abs(b.netPnl) - Math.abs(a.netPnl));
@@ -1977,6 +2075,7 @@
       let totalFundsWithdrawals = 0;
       const transferRows = [];
       const incomeRows = [];
+      const processedSplitKeys = new Set();
       let minDate = null;
       let maxDate = null;
 
@@ -2023,8 +2122,12 @@
         monthlyCashflow.set(row.month, (monthlyCashflow.get(row.month) || 0) + row.total);
         activity.set(row.type || "(blank)", (activity.get(row.type || "(blank)") || 0) + 1);
 
-        const isSplit = row.subType.includes("Split");
-        if (row.type === "Receive Deliver" && isSplit) {
+        if (isSplitRow(row)) {
+          const key = splitKey(row);
+          if (!processedSplitKeys.has(key)) {
+            transformSplitLots(lots, normalized, row);
+            processedSplitKeys.add(key);
+          }
           continue;
         }
 
@@ -2341,7 +2444,7 @@
     function renderOptionStrategyTable() {
       const tbody = document.querySelector("#optionStrategyTable tbody");
       if (!tbody || !app.summary) return;
-      const rows = sortedRows(app.summary.optionStrategies, "optionStrategy", strategy => ({
+      const rows = sortedRows(filteredOptionStrategies(), "optionStrategy", strategy => ({
         strategy: t(strategy.key),
         pnl: strategy.pnl,
         lifecycles: strategy.lifecycles,
@@ -2367,6 +2470,35 @@
           <td>${escapeHtml(strategy.topTicker)}</td>
         </tr>
       `).join("");
+    }
+
+    function optionTickerTerm() {
+      return app.optionTickerFilter.trim().toLowerCase();
+    }
+
+    function wheelTickerTerm() {
+      return app.wheelTickerFilter.trim().toLowerCase();
+    }
+
+    function filteredOptionStrategies() {
+      const term = optionTickerTerm();
+      if (!term) return app.summary.optionStrategies;
+      return app.summary.optionStrategies.filter(strategy =>
+        strategy.topTicker.toLowerCase().includes(term) ||
+        [...strategy.byTicker.keys()].some(ticker => ticker.toLowerCase().includes(term))
+      );
+    }
+
+    function filteredOptionLifecycles() {
+      const term = optionTickerTerm();
+      if (!term) return app.summary.optionLifecycles;
+      return app.summary.optionLifecycles.filter(lifecycle => lifecycle.ticker.toLowerCase().includes(term));
+    }
+
+    function filteredWheelCycles() {
+      const term = wheelTickerTerm();
+      if (!term) return app.summary.wheelCycles;
+      return app.summary.wheelCycles.filter(cycle => cycle.ticker.toLowerCase().includes(term));
     }
 
     function comparableValue(value) {
@@ -2430,7 +2562,7 @@
 
     function sortedOptionLifecycles() {
       const direction = app.lifecycleSortDir === "asc" ? 1 : -1;
-      return [...app.summary.optionLifecycles].sort((a, b) => {
+      return [...filteredOptionLifecycles()].sort((a, b) => {
         const av = lifecycleSortValue(a, app.lifecycleSortKey);
         const bv = lifecycleSortValue(b, app.lifecycleSortKey);
         if (typeof av === "string" || typeof bv === "string") {
@@ -2453,7 +2585,11 @@
       const tbody = document.querySelector("#optionLifecycleTable tbody");
       if (!tbody || !app.summary) return;
       renderLifecycleSortState();
-      tbody.innerHTML = sortedOptionLifecycles().map(lifecycle => {
+      const lifecycleRows = sortedOptionLifecycles();
+      if (app.selectedLifecycleId && !lifecycleRows.some(lifecycle => lifecycle.id === app.selectedLifecycleId)) {
+        app.selectedLifecycleId = null;
+      }
+      tbody.innerHTML = lifecycleRows.map(lifecycle => {
         const contractParts = lifecycle.contracts.map(contract =>
           `${contract.symbol} (${contract.rows}, ${formatMoney(contract.total)})`
         );
@@ -2578,7 +2714,7 @@
     function renderWheelTable() {
       const tbody = document.querySelector("#wheelTable tbody");
       if (!tbody || !app.summary) return;
-      const rows = sortedRows(app.summary.wheelCycles, "wheel", cycle => ({
+      const rows = sortedRows(filteredWheelCycles(), "wheel", cycle => ({
         id: parseInt(cycle.id.replace(/\D/g, ""), 10) || 0,
         ticker: cycle.ticker,
         status: t(cycle.statusKey),
@@ -2593,6 +2729,9 @@
         startDate: cycle.startDate,
         endDate: cycle.endDate
       }));
+      if (app.selectedWheelId && !rows.some(cycle => cycle.id === app.selectedWheelId)) {
+        app.selectedWheelId = null;
+      }
       wireSortableHeaders("#wheelTable", "wheel", renderWheelTable);
       tbody.innerHTML = rows.map(cycle => `
         <tr class="clickable-row ${app.selectedWheelId === cycle.id ? "selected" : ""}" data-wheel-id="${escapeHtml(cycle.id)}">
@@ -3230,7 +3369,17 @@
     }
 
     async function tryAutoLoad() {
-      setStatus(t("fileStatus"));
+      if (location.protocol === "file:") {
+        setStatus(t("fileStatus", { file: `<strong title="${escapeHtml(DEFAULT_CSV)}">${displayFileName(DEFAULT_CSV)}</strong>` }));
+        return;
+      }
+      try {
+        const response = await fetch(DEFAULT_CSV, { cache: "no-store" });
+        if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
+        await loadText(await response.text(), DEFAULT_CSV);
+      } catch (error) {
+        setStatus(t("autoLoadFail", { file: `<strong title="${escapeHtml(DEFAULT_CSV)}">${displayFileName(DEFAULT_CSV)}</strong>` }));
+      }
     }
 
     els.fileInput.addEventListener("change", async event => {
@@ -3251,7 +3400,7 @@
         setLoadedStatus();
         renderAll();
       } else {
-        setStatus(t("fileStatus"));
+        setStatus(t("fileStatus", { file: `<strong title="${escapeHtml(DEFAULT_CSV)}">${displayFileName(DEFAULT_CSV)}</strong>` }));
       }
     });
 
@@ -3261,7 +3410,11 @@
       app.selectedWheelId = null;
       app.drilldownTypeFilter = "all";
       app.search = "";
+      app.optionTickerFilter = "";
+      app.wheelTickerFilter = "";
       els.searchInput.value = "";
+      els.optionTickerFilter.value = "";
+      els.wheelTickerFilter.value = "";
       renderAll();
     });
 
@@ -3276,6 +3429,19 @@
     els.searchInput.addEventListener("input", event => {
       app.search = event.target.value;
       renderTickerTable();
+    });
+
+    els.optionTickerFilter.addEventListener("input", event => {
+      app.optionTickerFilter = event.target.value;
+      app.selectedLifecycleId = null;
+      renderOptionStrategyTable();
+      renderOptionLifecycleTable();
+    });
+
+    els.wheelTickerFilter.addEventListener("input", event => {
+      app.wheelTickerFilter = event.target.value;
+      app.selectedWheelId = null;
+      renderWheelTable();
     });
 
     els.periodPreset.addEventListener("change", event => {
@@ -3346,7 +3512,7 @@
 
     applyLanguage();
     updatePeriodControlVisibility();
-    setStatus(t("fileStatus"));
+    setStatus(t("fileStatus", { file: `<strong title="${escapeHtml(DEFAULT_CSV)}">${displayFileName(DEFAULT_CSV)}</strong>` }));
     tryAutoLoad();
   </script>
 </body>
